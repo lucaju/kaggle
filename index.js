@@ -1,7 +1,6 @@
 //Modules
 const cheerio = require('cheerio');
 require('colors');
-const csvdata = require('csvdata');
 const fs = require('fs');
 const jsonfile = require('jsonfile');
 const rp = require('request-promise');
@@ -10,260 +9,225 @@ const rp = require('request-promise');
 
 //-------------
 
-//Initialize variables\
+const KaggleScraper = function KaggleScraper() {
 
-let datetime = new Date();
-datetime = `${datetime.getFullYear()}-${(datetime.getMonth()+1)}-${datetime.getDate()}`;
+	//Initialize variables\
 
+	this.datetime = new Date();
+	this.datetime = `${this.datetime.getFullYear()}-${(this.datetime.getMonth()+1)}-${this.datetime.getDate()}`;
 
-const targets = [
-	{
-		name: 'Datasets',
-		url: 'https://www.kaggle.com/datasets?sortBy=votes&group=public&page=1&pageSize=20&size=all&filetype=all&license=all'
+	const pageSzie = 20;
+
+	this.targets = [{
+		name: 'datasets',
+		url: `https://www.kaggle.com/datasets?sortBy=votes&group=public&page=1&pageSize=${pageSzie}&size=all&filetype=all&license=all`
 	},
 	{
-		name: 'Competitions',
-		url: 'https://www.kaggle.com/competitions?sortBy=numberOfTeams&group=general&page=1&pageSize=20'
+		name: 'competitions',
+		url: `https://www.kaggle.com/competitions?sortBy=numberOfTeams&group=general&page=1&pageSize=${pageSzie}`
 	},
 	{
-		name: 'User: Competition',
-		url: 'https://www.kaggle.com/rankings?group=competitions&page=1&pageSize=20'
+		name: 'users',
+		url: `https://www.kaggle.com/rankings?group=competitions&page=1&pageSize=${pageSzie}`
 	}
-];
+	];
 
-let rpOptions = {
-	transform: function (body) {
-		return cheerio.load(body);
-	}
+	this.rpOptions = {
+		transform: function (body) {
+			return cheerio.load(body);
+		}
+	};
+
+
+	//----------------------------//
+	//initiate
+	this.initScrapper = function initScrapper() {
+		console.log('Scraper for Kaggle'.green);
+		console.log('-----------------');
+		console.log('Initializing scrapping.');
+
+		Promise.all(this.targets.map(this.loadURL))
+			.then(function () {
+				console.log('-----------------');
+				console.log('End scraping.');
+			});
+
+	};
+
+	this.loadURL = function loadURL(target) {
+
+		return new Promise(
+			(resolve) => {
+
+				scraper.rpOptions.uri = target.url;
+
+				//loadd promise
+				rp(scraper.rpOptions)
+					.then(scraper.sleeper(100))
+					.then(($) => {
+						return scraper.scrapeTarget(target, $);
+					})
+					.then(function (data) {
+						return scraper.getJson(data);
+					})
+					.then(function (data) {
+						resolve(data);
+					})
+					.catch((err) => {
+						console.log(err);
+					});
+			});
+
+	};
+
+	//delay load pages to scrapper
+	this.sleeper = function sleeper(ms) {
+		return function (x) {
+			return new Promise(resolve => setTimeout(() => resolve(x), ms));
+		};
+	};
+
+
+	this.scrapeTarget = function scrapeTarget(target, $) {
+
+		return new Promise(
+			(resolve) => {
+
+				console.log('-----------------'.blue);
+				console.log(`TOP ${target.name}`.blue);
+
+				//the data is on a javascript within the page
+				const script = $('.site-layout__main-content').find('script');
+				const scriptData = script.html();
+
+				//the is in a json within the script
+				// Must trim javascript stuff before and after
+				let trimInitial = 77;
+				let trimEnd;
+
+				if (target.name == 'datasets') {
+					trimEnd = 93;
+				} else if (target.name == 'competitions') {
+					trimEnd = 101;
+				} else if (target.name == 'users') {
+					trimEnd = 94;
+				}
+
+				//isolate data
+				const isolatedData = scriptData.substring(trimInitial, scriptData.length - trimEnd);
+				const jsonData = JSON.parse(isolatedData);
+
+				let list = [];
+
+				if (target.name == 'datasets') {
+					list = jsonData.datasetListItems;
+					list = this.parseDatasetInfo(list);
+				} else if (target.name == 'competitions') {
+					list = jsonData.pagedCompetitionGroup.competitions;
+					list = this.parseCompetitionInfo(list);
+				} else if (target.name == 'users') {
+					list = jsonData.list;
+					list = this.parseUserInfo(list);
+				}
+
+				const data = {
+					title: target.name,
+					dataset: list,
+				};
+
+				resolve(data);
+			});
+
+	};
+
+	this.parseDatasetInfo = function parseDatasetInfo(list) {
+		for (const item of list) {
+
+			//get only votes from vote button
+			item.totalVotes = item.voteButton.totalVotes;
+			delete item.voteButton;
+
+			//unpack filetypes
+			item.commonFileTypes = item.commonFileTypes;
+
+			//upack categories
+			item.categories = item.categories;
+
+			const listCategories = item.categories.categories;
+			item.categories = [];
+
+			for (const category of listCategories) {
+				item.categories.push(category);
+			}
+
+			console.log(`${item.totalVotes} votes | ${item.title}`);
+		}
+
+		return list;
+
+	};
+
+	this.parseCompetitionInfo = function parseCompetitionInfo(list) {
+		for (const item of list) {
+
+			//upack categories
+			const listCategories = item.categories.categories;
+			item.categories = [];
+
+			for (const category of listCategories) {
+				item.categories.push(category);
+			}
+
+			console.log(`${item.totalTeams} teams | ${item.competitionTitle}`);
+		}
+
+		return list;
+
+	};
+
+	this.parseUserInfo = function parseUserInfo(list) {
+		for (const item of list) {
+			console.log(`#${item.currentRanking} | ${item.displayName}`);
+		}
+
+		return list;
+
+	};
+
+	//get JSON
+	this.getJson = function getJson(data) {
+
+		return new Promise(
+			(resolve, reject) => {
+
+				const folder = './results';
+				const fileName = `kaggle-top-${data.title}-${this.datetime}.json`;
+
+				data.folder = folder;
+				data.fileName = fileName;
+
+				console.log('-----------------'.green);
+				console.log(`Writing data to ${folder}/${fileName}`);
+
+				if (!fs.existsSync(folder)) fs.mkdirSync(folder);
+
+				jsonfile.writeFile(`${folder}/${fileName}`, data.dataset, {
+					spaces: 4
+				}, function (err) {
+					if (err) {
+						console.log(err);
+						reject(err);
+					} else {
+						console.log('Json: Data written!'.green);
+						resolve(data);
+					}
+				});
+
+			});
+
+	};
+
 };
 
-//----------------------------
-//Initical Setup
-
-
-initScrapper();
-
-//----------------------------//
-//initiate
-
-//delay load pages to scrapper
-function sleeper(ms) {
-	return function (x) {
-		return new Promise(resolve => setTimeout(() => resolve(x), ms));
-	};
-}
-
-// initScrapper();
-function initScrapper() {
-	console.log('Scraper for Kaggle'.green);
-	console.log('-----------------');
-	console.log('Initializing scrapping.');
-
-	for (const target of targets) {
-		console.log(`Top ${target.name} | URL: ${target.url}`);
-		loadURL(target);
-	}
-
-}
-
-function loadURL(target) {
-	rpOptions.uri = target.url;
-
-	//loadd promise
-	rp(rpOptions)
-		.then(sleeper(100))
-		.then(($) => {
-
-			if (target.name == 'Datasets') {
-				scrapeTopDatasets($);
-			} else if (target.name == 'Competitions') {
-				scrapeTopChallenges($);
-			} else if (target.name == 'User: Competition') {
-				scrapeTopUser($);
-			}
-		})
-		.catch((err) => {
-			console.log(err);
-		});
-
-}
-
-function scrapeTopDatasets($) {
-	
-	const script = $('.site-layout__main-content').find('script');
-	const data = script.html();
-
-	//isolate data
-	const isolatedData = data.substring(77,data.length-93);
-	const jsonData = JSON.parse(isolatedData);
-	const list = jsonData.datasetListItems;
-
-	console.log('-----------------'.blue);
-	console.log('TOP DATASETS'.blue);
-
-	const topDatasets = {
-		title: 'Kaggle-Top-Datasets',
-		dataset:[],
-		headers: 'title,downloads,views,votes,url'
-	};
-	
-	for (const item of list) {
-		topDatasets.dataset.push(extractDatasetInfo(item));
-	}
-
-	getJson(topDatasets);
-	getCSV(topDatasets);
-
-}
-
-function extractDatasetInfo(item) {
-
-	// console.log(item);
-
-	const Dataset = {
-		title: item.title,
-		downloads: item.downloadCount,
-		views: item.viewCount,
-		votes: item.voteButton.totalVotes,
-		url: 'https://www.kaggle.com' + item.datasetUrl
-	};
-
-	return Dataset;
-}
-
-
-function scrapeTopChallenges($) {
-
-	const script = $('.site-layout__main-content').find('script');
-	const data = script.html();
-
-	// //isolate data
-	const isolatedData = data.substring(77,data.length-101);
-	const jsonData = JSON.parse(isolatedData);
-	const list = jsonData.pagedCompetitionGroup.competitions;
-
-	console.log('-----------------'.blue);
-	console.log('TOP COMPETITIONS'.blue);
-
-	const topCompetition = {
-		title: 'Kaggle-Top-Challenges',
-		dataset:[],
-		headers: 'title,organization,teams,url'
-	};
-	
-	for (const item of list) {
-		topCompetition.dataset.push(extractChallengeInfo(item));
-	}
-
-	getJson(topCompetition);
-	getCSV(topCompetition);
-
-}
-
-function extractChallengeInfo(item) {
-
-	// console.log(item);
-
-	const competition = {
-		title: item.competitionTitle,
-		organization: item.organizationName,
-		teams: item.totalTeams,
-		url: 'https://www.kaggle.com' + item.competitionUrl
-	};
-
-	return competition;
-}
-
-function scrapeTopUser($) {
-
-	const script = $('.site-layout__main-content').find('script');
-	const data = script.html();
-
-	// //isolate data
-	const isolatedData = data.substring(77,data.length-94);
-	const jsonData = JSON.parse(isolatedData);
-	const list = jsonData.list;
-
-	console.log('-----------------'.blue);
-	console.log('TOP USERS'.blue);
-
-	const topUsers = {
-		title: 'Kaggle-Top-Users-Competition',
-		dataset:[],
-		headers: 'name,ranking,tier,goldMedals,silverMedals,bronzeMedals,url'
-	};
-	
-	for (const item of list) {
-		topUsers.dataset.push(extractUserInfo(item));
-	}
-
-	getJson(topUsers);
-	getCSV(topUsers);
-
-}	
-
-function extractUserInfo(item) {
-
-	// console.log(item);
-
-	const user = {
-		name: item.displayName,
-		ranking: item.currentRanking,
-		tier: item.tier,
-		goldMedals: item.totalGoldMedals,
-		silverMedals: item.totalSilverMedals,
-		bronzeMedals: item.totalBronzeMedals,
-		url: 'https://www.kaggle.com' + item.userUrl
-	};
-
-	return user;
-}
-
-//get JSON
-function getJson(target) {
-
-	const fileName = `${target.title}-${datetime}.json`;
-	const folder = './results';
-
-	console.log(`Writing data to ${folder}/${fileName}`);
-
-	if (!fs.existsSync(folder)) fs.mkdirSync(folder);
-
-	jsonfile.writeFile(`${folder}/${fileName}`, target.dataset, {
-		spaces: 4
-	}, function (err) {
-		if (err) {
-			console.log(err);
-		} else {
-			console.log('Json: Data written!'.green);
-
-			console.log('-----------------');
-		}
-	});
-
-}
-
-//get CSV
-function getCSV(target) {
-
-	const fileName = `${target.title}-${datetime}.csv`;
-	const folder = './results';
-
-	if (!fs.existsSync(folder)) fs.mkdirSync(folder);
-
-	//header
-	// const header = target.headers;
-	// csvdata.write(`${folder}/${file}`, header);
-
-	//body
-	let options = {
-		// append: false,
-		delimiter: ',',
-		header: target.headers,
-		log: true
-	};
-
-	csvdata.write(`${folder}/${fileName}`, target.dataset, options);
-
-	console.log('-----------------');
-}
+const scraper = new KaggleScraper();
+scraper.initScrapper();
