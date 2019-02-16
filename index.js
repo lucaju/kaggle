@@ -1,7 +1,7 @@
 //Modules
 const cheerio = require('cheerio');
 require('colors');
-const fs = require('fs');
+const fs = require('fs-extra');
 const jsonfile = require('jsonfile');
 const rp = require('request-promise');
 
@@ -13,23 +13,20 @@ const KaggleScraper = function KaggleScraper() {
 
 	//Initialize variables\
 
-	this.datetime = new Date();
-	this.datetime = `${this.datetime.getFullYear()}-${(this.datetime.getMonth()+1)}-${this.datetime.getDate()}`;
-
 	const pageSzie = 20;
 
 	this.targets = [{
-		name: 'datasets',
-		url: `https://www.kaggle.com/datasets?sortBy=votes&group=public&page=1&pageSize=${pageSzie}&size=all&filetype=all&license=all`
-	},
-	{
-		name: 'competitions',
-		url: `https://www.kaggle.com/competitions?sortBy=numberOfTeams&group=general&page=1&pageSize=${pageSzie}`
-	},
-	{
-		name: 'users',
-		url: `https://www.kaggle.com/rankings?group=competitions&page=1&pageSize=${pageSzie}`
-	}
+			name: 'datasets',
+			url: `https://www.kaggle.com/datasets?sortBy=votes&group=public&page=1&pageSize=${pageSzie}&size=all&filetype=all&license=all`
+		},
+		{
+			name: 'competitions',
+			url: `https://www.kaggle.com/competitions?sortBy=numberOfTeams&group=general&page=1&pageSize=${pageSzie}`
+		},
+		{
+			name: 'users',
+			url: `https://www.kaggle.com/rankings?group=competitions&page=1&pageSize=${pageSzie}`
+		}
 	];
 
 	this.rpOptions = {
@@ -68,7 +65,10 @@ const KaggleScraper = function KaggleScraper() {
 						return scraper.scrapeTarget(target, $);
 					})
 					.then(function (data) {
-						return scraper.getJson(data);
+						return scraper.saveJson(data);
+					})
+					.then(function (data) {
+						return scraper.copyFile(data);
 					})
 					.then(function (data) {
 						resolve(data);
@@ -130,8 +130,14 @@ const KaggleScraper = function KaggleScraper() {
 					list = this.parseUserInfo(list);
 				}
 
+				//add datatetime
+				let datetime = new Date();
+				datetime = `${datetime.getFullYear()}-${(datetime.getMonth()+1)}-${datetime.getDate()}`;
+
+				//payload
 				const data = {
 					title: target.name,
+					datetime: datetime,
 					dataset: list,
 				};
 
@@ -195,13 +201,13 @@ const KaggleScraper = function KaggleScraper() {
 	};
 
 	//get JSON
-	this.getJson = function getJson(data) {
+	this.saveJson = function saveJson(data) {
 
 		return new Promise(
 			(resolve, reject) => {
 
 				const folder = './results';
-				const fileName = `kaggle-top-${data.title}-${this.datetime}.json`;
+				const fileName = `kaggle-top-${data.title}-${data.datetime}.json`;
 
 				data.folder = folder;
 				data.fileName = fileName;
@@ -211,7 +217,16 @@ const KaggleScraper = function KaggleScraper() {
 
 				if (!fs.existsSync(folder)) fs.mkdirSync(folder);
 
-				jsonfile.writeFile(`${folder}/${fileName}`, data.dataset, {
+				//payload
+				const results = {
+					title: data.title,
+					datetime: data.datetime,
+					data: data.dataset
+				};
+
+
+				//Save Json file
+				jsonfile.writeFile(`${folder}/${fileName}`, results, {
 					spaces: 4
 				}, function (err) {
 					if (err) {
@@ -222,6 +237,33 @@ const KaggleScraper = function KaggleScraper() {
 						resolve(data);
 					}
 				});
+
+			});
+
+	};
+
+
+	//get JSON
+	this.copyFile = function copyFile(data) {
+
+		return new Promise(
+			(resolve, reject) => {
+
+				const originFolder = './results';
+				const copyFolder = './copies';
+				if (!fs.existsSync(copyFolder)) fs.mkdirSync(copyFolder);
+
+				console.log(`Copy file to: ${copyFolder}`);
+
+				// With Promises:
+				fs.copy(`${originFolder}/${data.fileName}`, `${copyFolder}/${data.fileName}`)
+					.then(() => {
+						resolve(data);
+					})
+					.catch(err => {
+						console.error(err);
+						reject(err);
+					});
 
 			});
 
