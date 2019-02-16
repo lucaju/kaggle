@@ -1,5 +1,6 @@
 # folders
 /results
+/copies
 
 # files
 package-lock.json
