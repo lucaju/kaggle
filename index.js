@@ -14,19 +14,19 @@ const KaggleScraper = function KaggleScraper() {
 
 	//Initialize variables\
 
-	const pageSzie = 20;
+	const pageSize = 20;
 
 	this.targets = [{
 		name: 'datasets',
-		url: `https://www.kaggle.com/datasets?sortBy=votes&group=public&page=1&pageSize=${pageSzie}&size=all&filetype=all&license=all`
+		url: `https://www.kaggle.com/datasets?sortBy=votes&group=public&page=1&pageSize=${pageSize}&size=all&filetype=all&license=all`
 	},
 	{
 		name: 'competitions',
-		url: `https://www.kaggle.com/competitions?sortBy=numberOfTeams&group=general&page=1&pageSize=${pageSzie}`
+		url: `https://www.kaggle.com/competitions?sortBy=numberOfTeams&group=general&page=1&pageSize=${pageSize}`
 	},
 	{
 		name: 'users',
-		url: `https://www.kaggle.com/rankings?group=competitions&page=1&pageSize=${pageSzie}`
+		url: `https://www.kaggle.com/rankings?group=competitions&page=1&pageSize=${pageSize}`
 	}
 	];
 

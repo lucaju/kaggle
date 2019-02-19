@@ -28,6 +28,6 @@
     "request-promise": "^4.2.4"
   },
   "devDependencies": {
-    "eslint": "^5.14.0"
+    "eslint": "^5.14.1"
   }
 }
