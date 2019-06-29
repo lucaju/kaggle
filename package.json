@@ -1,6 +1,6 @@
 {
 	"name": "scraper-kaggle",
-	"version": "1.0.0",
+	"version": "0.2.0",
 	"predeploy": "npm version patch",
 	"description": "Scraper for Kaggle",
 	"main": "index.js",
@@ -21,6 +21,7 @@
 	"dependencies": {
 		"chalk": "^2.4.2",
 		"luxon": "^1.16.0",
+		"mongoose": "^5.6.2",
 		"puppeteer": "^1.18.1"
 	},
 	"devDependencies": {

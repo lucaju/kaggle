@@ -1,18 +1,22 @@
 const chalk = require('chalk');
 
-const collectCompetitions = async (page, url) => {
+const url ='https://www.kaggle.com/competitions';
+
+let rank = 1;
+
+const collectCompetitions = async (page) => {
 
 	const collection = [];
 
 	console.log('\n');
-	console.log(chalk.green('Collecting competitions'));
+	console.log(chalk.green.bold('Collecting Competitions'));
 
 	await page.goto(url);
 	// await page.waitFor(1 * 1000);
 	await page.waitFor('.smart-list__content');
 
 	//get list of items
-	const items = await page.$$('.smart-list__content .sc-istKyD');
+	const items = await page.$$('.smart-list__content .sc-cItKUH');
 	console.log(items.length);
 
 	for (const item of items) {
@@ -23,7 +27,7 @@ const collectCompetitions = async (page, url) => {
 		const endpoint = await item.$eval('div > div:first-child > a', content => content.getAttribute('href'));
 		const description = await item.$eval('div > div:first-child > p', content => content.innerText);
 		const type = await item.$eval('div > div:first-child > div > span:first-child', content => content.innerText);
-		const date = await item.$eval('div > div:first-child > div > span:last-child > span:nth-child(2)', content => content.getAttribute('title'));
+		const deadline = await item.$eval('div > div:first-child > div > span:last-child > span:nth-child(2)', content => content.getAttribute('title'));
 		
 		//some competions doens't have tags
 		let tags = [];
@@ -39,10 +43,8 @@ const collectCompetitions = async (page, url) => {
 
 		let teamsTotal = '';
 		try {
-			teamsTotal = await item.$eval('div > div .sc-iHBgdc > span', content => content.innerText);
+			teamsTotal = await item.$eval('div > div .sc-cfHlVB > span', content => content.innerText);
 			teamsTotal = teamsTotal.split(' ')[0];
-			
-			teamsTotal = parseFloat(teamsTotal.replace(/,/g, ''));
 		} catch (err) {
 			teamsTotal = '';
 		}
@@ -52,15 +54,21 @@ const collectCompetitions = async (page, url) => {
 			title,
 			endpoint,
 			description,
+			deadline,
 			type,
-			date,
 			tags,
 			prize,
-			teamsTotal
+			teamsTotal,
+			rank: {
+				date: new Date(),
+				rank: rank
+			}
 		};
 
 		//add to array
 		collection.push(competition);
+
+		rank += 1;
 	}
 
 	// console.log(collection);

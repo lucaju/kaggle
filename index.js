@@ -2,33 +2,28 @@ const chalk = require('chalk');
 const {DateTime} = require('luxon');
 const puppeteer = require('puppeteer');
 // const util = require('util');
-const {collectDatasets} = require('./scraper/datasets.js');
-const {collectUsers} = require('./scraper/users.js');
-const {collectCompetitions} = require('./scraper/competitions.js');
+const mongoose = require('./src/db/mongoose');
+
+const {collectDatasets} = require('./src/scraper/datasets');
+const {collectUsers} = require('./src/scraper/users');
+const {collectCompetitions} = require('./src/scraper/competitions');
+
+const {addUsers} = require('./src/router/user');
+const {addDatasets} = require('./src/router/dataset');
+const {addCompetitions} = require('./src/router/competition');
 
 
 const targets = [
-	{
-		name: 'datasets',
-		url: 'https://www.kaggle.com/datasets'
-	},
-	{
-		name: 'competitions',
-		url: 'https://www.kaggle.com/competitions'
-	},
-	{
-		name: 'users',
-		url: 'https://www.kaggle.com/rankings'
-	}
+	'datasets',
+	'competitions',
+	'users'
 ];
-
 let browser;
-
 
 const run = async () => {
 
 	const now = DateTime.local();
-	console.log(chalk.yellow(`Scraping Kaggle: ${now.toFormat('yyyy LLL dd')}`));
+	console.log(chalk.blue(`Scraping Kaggle: ${now.toFormat('yyyy LLL dd')}`));
 
 	//lunch puppeteer
 	browser = await puppeteer.launch({
@@ -38,19 +33,22 @@ const run = async () => {
 			height: 1000
 		},
 	});
-	console.log(chalk.blue('Puppeteer Launched'));
+	console.log(chalk.gray('Puppeteer Launched'));
 
 	//open new tab
 	const page = await browser.newPage();
 
 	//loop through the pages to scrape
 	for (const target of targets) {
-		if (target.name == 'datasets') {
-			await collectDatasets(page, target.url);
-		} else if (target.name == 'competitions') {
-			await collectCompetitions(page,target.url);
-		} else if (target.name == 'users') {
-			await collectUsers(page,target.url);
+		if (target == 'datasets') {
+			const collection = await collectDatasets(page);
+			await addDatasets(collection);
+		} else if (target == 'competitions') {
+			const collection = await collectCompetitions(page);
+			await addCompetitions(collection);
+		} else if (target == 'users') {
+			const collection = await collectUsers(page);
+			await addUsers(collection);
 		}
 	}
 
@@ -60,7 +58,8 @@ const run = async () => {
 	console.log(chalk.blue('Done'));
 	await page.waitFor(0.5 * 1000);
 	await browser.close();
-	await page.waitFor(0.5 * 1000);
+
+	mongoose.close();
 };
 
 

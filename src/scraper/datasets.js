@@ -1,11 +1,13 @@
 const chalk = require('chalk');
 
-const collectDatasets = async (page, url) => {
+const url ='https://www.kaggle.com/datasets';
+
+const collectDatasets = async (page) => {
 
 	const collection = [];
 
 	console.log('\r');
-	console.log(chalk.green('Collecting Datasets'));
+	console.log(chalk.green.bold('Collecting Datasets'));
 
 	await page.goto(url);
 	// await page.waitFor(1 * 1000);
@@ -13,6 +15,8 @@ const collectDatasets = async (page, url) => {
 
 	//get list of items
 	const items = await page.$$('.datasets__list-wrapper ul li');
+
+	let rank = 1;
 
 	for (const item of items) {
 
@@ -24,19 +28,19 @@ const collectDatasets = async (page, url) => {
 		const endpoint = await item.$eval('a', content => content.getAttribute('href'));
 		const userEndpoint = await item.$eval('div > div > div > a', content => content.getAttribute('href'));
 
-		let size = await item.$eval('div > div > div:last-child > span:nth-child(2)', content => content.innerText);
-		size = size.split(' ');
+		let filesize = await item.$eval('div > div > div:last-child > span:nth-child(2)', content => content.innerText);
+		filesize = filesize.split(' ');
 		
-		const sizeUnit = size[1];
-		let fileSize = parseFloat(size[0]);
+		const sizeUnit = filesize[1];
+		let size = parseFloat(filesize[0]);
 
 		//convert file size
 		if (sizeUnit.toLowerCase() == 'mb') {
-			fileSize = fileSize * 1024;
+			size = size * 1024;
 		} else if (sizeUnit.toLowerCase() == 'gb') {
-			fileSize = fileSize * 1024 * 1024;
+			size = size * 1024 * 1024;
 		} else if (sizeUnit.toLowerCase() == 'tb') {
-			fileSize = fileSize * 1024 * 1024 * 1024;
+			size = size * 1024 * 1024 * 1024;
 		}
 
 		let usability = await item.$eval('div > div > div:last-child > div > span', content => content.innerText);
@@ -72,15 +76,12 @@ const collectDatasets = async (page, url) => {
 		await page.waitFor('div .mdc-dialog__surface');
 
 		//modal
-		const description = await page.$eval('div .mdc-dialog__surface > div .sc-fQkuQJ', content => content.innerText);
+		const description = await page.$eval('div .mdc-dialog__surface > div .sc-fQkuQJ  p', content => content.innerText);
 
 		const modalMeta = await page.$('div .mdc-dialog__surface > div .sc-cCVOAp');
 		
 		let createdAt = await modalMeta.$eval('span:nth-of-type(1)', content => content.innerText);
 		createdAt = createdAt.split('\n')[1];
-
-		let modifieddAt = await modalMeta.$eval('span:nth-of-type(2)', content => content.innerText);
-		modifieddAt = modifieddAt.split('\n')[1];
 
 		const license = await modalMeta.$eval('span:nth-of-type(3) > span:nth-of-type(2)', content => content.innerText);
 		const tags = await modalMeta.$$eval('span:nth-of-type(4) div div', content => content.map(n => n.innerText));
@@ -92,18 +93,21 @@ const collectDatasets = async (page, url) => {
 		//put into an object 
 		const dataset = {
 			title,
-			description,
-			owner,
 			endpoint,
-			userEndpoint,
-			fileSize,
-			usability,
-			files,
-			upvotes,
+			description,
 			createdAt,
-			modifieddAt,
+			owner,
+			userEndpoint,
 			license,
+			usability,
+			size,
+			files,
 			tags,
+			upvotes,
+			rank: {
+				date: new Date(),
+				rank: rank
+			}
 		};
 
 		//add to array
@@ -113,6 +117,9 @@ const collectDatasets = async (page, url) => {
 		page.evaluate( () => {
 			window.scrollBy(0, 89);
 		});
+
+
+		rank += 1;
 
 	}
 
