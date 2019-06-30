@@ -1,7 +1,6 @@
 const sgMail = require('@sendgrid/mail');
 const {messagesLog,errorsLog} = require('../logs/datalog');
 
-// sgMail.setApiKey(process.env.SENDGRID_API_KEY)
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const sendLogEmail = () => {
@@ -12,15 +11,14 @@ const sendLogEmail = () => {
 	const msg = composeMessage(date);
 
 	sgMail.send({
-		to: 'luciano@fluxo.art.br',
-		from: 'lucaju@gmail.com',
+		to: process.env.EMAIL_TO,
+		from: process.env.EMAIL_FROM,
 		subject: `{App: Kaggle Scraper - ${date}}`,
 		html: msg
 	});
 };
 
 const composeMessage = (date) => {
-
 	const title = `Scraping Kaggle: ${date}`;
 
 	const msgs = getMessages('Log', messagesLog);
@@ -33,11 +31,9 @@ const composeMessage = (date) => {
 		<div>${error}</div>
 	</body>
 	`;
-
 };
 
 const getMessages = (type,messages) => {
-
 	let html = '';
 
 	if (messages.length > 0) {

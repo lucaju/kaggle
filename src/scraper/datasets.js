@@ -19,9 +19,8 @@ const collectDatasets = async page => {
 		//get list of items
 		const items = await page.$$('.datasets__list-wrapper ul li');
 		console.log(chalk.grey(`[${items.length}]`));
-
-		//ranking
-		let rank = 1;
+		
+		let rank = 1; //ranking
 
 		for (const item of items) {
 			const dataset = await getDetails(item, rank, page);
@@ -33,8 +32,7 @@ const collectDatasets = async page => {
 				window.scrollBy(0, 89);
 			});
 
-			//upadate ranking
-			rank += 1;
+			rank += 1; //upadate ranking
 		}
 
 		return collection;
@@ -50,7 +48,7 @@ const getDetails = async (item, rank, page) => {
 
 	try {
 
-		//Scrape the main info
+		//------ 1. Main info
 		const title = await item.$eval('div > div > h3', content => content.innerHTML);
 		console.log(`:: ${title}`);
 
@@ -94,7 +92,9 @@ const getDetails = async (item, rank, page) => {
 		upvotes = upvotes[0];
 		upvotes = parseFloat(upvotes);
 
-		//------details
+
+		//------2. details
+
 		// Mouse over to show "quick Look" button > click button to open modal
 		const itemBox = await item.boundingBox();
 		await page.mouse.move(itemBox.x + (itemBox.width/2), itemBox.y + (itemBox.height/2));
@@ -120,7 +120,7 @@ const getDetails = async (item, rank, page) => {
 		await page.keyboard.press('Escape');
 		// ------
 
-		//put into an object 
+		//return object 
 		return {
 			title,
 			endpoint,

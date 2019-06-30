@@ -69,7 +69,7 @@ const getDetails = async (item,rank) => {
 			teamsTotal = '';
 		}
 
-		//put into an object 
+		//return object 
 		return {
 			title,
 			endpoint,

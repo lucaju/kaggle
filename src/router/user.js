@@ -23,7 +23,7 @@ const addUsers = async collection => {
 		}
 	}
 
-	logMessage(`USERS: ${itemsAdded} users added. ${itemsUpdated} users updated.`);
+	logMessage(`USERS: ${itemsAdded} added. ${itemsUpdated} updated.`);
 
 	console.log(
 		chalk.keyword('olive')(`${itemsAdded} users added.`),
@@ -42,8 +42,8 @@ const addUser = async data => {
 	try {
 		return await user.save();
 	} catch (err) {
-		console.log(`MongoDB did not inserted user ${user.name}: ${err}`);
-		logError(`MongoDB did not inserted user ${user.name}: ${err}`);
+		console.log(`MongoDB did not insert user ${user.name}: ${err}`);
+		logError(`MongoDB did not insert user ${user.name}: ${err}`);
 	}
 };
 

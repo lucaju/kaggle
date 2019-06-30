@@ -24,7 +24,7 @@ const addDatasets = async collection => {
 
 	}
 
-	logMessage(`DATASETS: ${itemsAdded} users added. ${itemsUpdated} users updated.`);
+	logMessage(`DATASETS: ${itemsAdded} added. ${itemsUpdated} updated.`);
 
 	console.log(
 		chalk.keyword('olive')(`${itemsAdded} datasets added.`),
@@ -43,8 +43,8 @@ const addDataset = async data => {
 	try {
 		return await dataset.save();
 	} catch (err) {
-		console.log(`MongoDB did not inserted dataset ${dataset.title}: ${err}`);
-		logError(`MongoDB did not inserted dataset ${dataset.title}: ${err}`);
+		console.log(`MongoDB did not insert dataset ${dataset.title}: ${err}`);
+		logError(`MongoDB did not insert dataset ${dataset.title}: ${err}`);
 	}
 };
 

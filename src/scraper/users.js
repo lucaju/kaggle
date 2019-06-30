@@ -20,8 +20,7 @@ const collectUsers = async page => {
 		const items = await page.$$('.leaderboards__item-wrapper');
 		console.log(chalk.grey(`[${items.length}]`));
 	
-		//remove header
-		items.shift();
+		items.shift(); //remove header
 
 		for (const item of items) {
 			const user = await getDetails(item);
@@ -62,6 +61,7 @@ const getDetails = async item => {
 		let bronze = await item.$eval('.leaderboards__medal--bronze', content => content.lastChild.innerText);
 		bronze = parseFloat(bronze);
 
+		//return object 
 		return {
 			name,
 			endpoint,

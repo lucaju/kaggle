@@ -1,15 +1,5 @@
 const mongoose = require('mongoose');
 
-// const RankSchema = mongoose.Schema({
-// 	date: {
-// 		type: Date
-// 	},
-// 	rank: {
-// 		type: Number
-// 	}
-// });
-
-
 const User = mongoose.model('User', {
 	name: {
 		type: String,

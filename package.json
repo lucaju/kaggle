@@ -1,7 +1,6 @@
 {
 	"name": "scraper-kaggle",
 	"version": "0.2.0",
-	"predeploy": "npm version patch",
 	"description": "Scraper for Kaggle",
 	"main": "index.js",
 	"scripts": {
@@ -11,8 +10,12 @@
 		"type": "git",
 		"url": "git+https://github.com/lucaju/kaggle"
 	},
-	"author": "Luciano Frizzera",
-	"license": "MIT",
+	"author": {
+		"name": "Luciano Frizzera",
+		"email": "lucaju@gmail.com",
+		"url": "http://luciano.fluxo.art.br"
+	},
+	"license": "CC-BY-SA-4.0",
 	"keywords": [
 		"Kaggle",
 		"Scraper"

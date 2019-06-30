@@ -1,6 +1,5 @@
 const Competition = require('../models/competition');
 const chalk = require('chalk');
-
 const {logMessage, logError} = require('../logs/datalog');
 
 const addCompetitions = async collection => {
@@ -24,7 +23,7 @@ const addCompetitions = async collection => {
 
 	}
 
-	logMessage(`COMPETITIONS: ${itemsAdded} users added. ${itemsUpdated} users updated.`);
+	logMessage(`COMPETITIONS: ${itemsAdded} added. ${itemsUpdated} updated.`);
 
 	console.log(
 		chalk.keyword('olive')(`${itemsAdded} competitions added.`),
@@ -42,8 +41,8 @@ const addCompetition = async data => {
 	try {
 		return await competition.save();
 	} catch (err) {
-		console.log(`MongoDB did not inserted competition ${competition.title}: ${err}`);
-		logError(`MongoDB did not inserted competition ${competition.title}: ${err}`);
+		console.log(`MongoDB did not insert competition ${competition.title}: ${err}`);
+		logError(`MongoDB did not insert competition ${competition.title}: ${err}`);
 	}
 };
 
