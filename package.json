@@ -4,7 +4,8 @@
 	"description": "Scraper for Kaggle",
 	"main": "index.js",
 	"scripts": {
-		"start": "env-cmd node index.js"
+		"start": "env-cmd node index",
+		"dev-import": "env-cmd node src/util/importOldResults"
 	},
 	"repository": {
 		"type": "git",
@@ -28,6 +29,7 @@
 	},
 	"devDependencies": {
 		"env-cmd": "^9.0.3",
-		"eslint": "^6.0.1"
+		"eslint": "^6.0.1",
+		"luxon": "^1.16.0"
 	}
 }

@@ -1,5 +1,7 @@
 # folders
 /old
+/results
+
 
 # files
 package-lock.json

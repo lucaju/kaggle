@@ -11,7 +11,7 @@ const addUsers = async collection => {
 	let itemsUpdated = 0;
 
 	for (const data of collection) {
-
+		
 		const user = await findUserByName(data.name);
 
 		if (!user) {
@@ -27,7 +27,7 @@ const addUsers = async collection => {
 
 	console.log(
 		chalk.keyword('olive')(`${itemsAdded} users added.`),
-		chalk.keyword('orange')(`${itemsUpdated} users updated.`)
+		chalk.keyword('orange')(`${itemsUpdated} users updated.\n`)
 	);
 
 };

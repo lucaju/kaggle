@@ -19,6 +19,8 @@ const targets = [
 	'users'
 ];
 
+const sendEmail = false;
+
 const run = async () => {
 
 	const date = new Date();
@@ -60,11 +62,13 @@ const run = async () => {
 	mongoose.close();
 
 	//send log email
-	try {
-		await sendLogEmail();
-		console.log('Log email sent.');
-	} catch (err) {
-		console.log(`Email not sent: ${err}`);
+	if (sendEmail) {
+		try {
+			await sendLogEmail();
+			console.log('Log email sent.');
+		} catch (err) {
+			console.log(`Email not sent: ${err}`);
+		}
 	}
 
 	//done

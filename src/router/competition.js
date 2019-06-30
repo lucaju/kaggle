@@ -50,6 +50,7 @@ const updateCompetition = async (competition, data) => {
 
 	if (data.description != '' && competition.description != data.description) competition.description = data.description;
 	if (data.deadline != '' && competition.deadline != data.deadline) competition.deadline = data.deadline;
+	if (data.organization != '' && competition.organization != data.organization) competition.organization = data.organization;
 	if (data.type != '' && competition.type != data.type) competition.type = data.type;
 	if (data.tags.length > 0 && competition.tags.join() != data.tags.join()) competition.tags = data.tags;
 	if (data.prize != '' && competition.prize != data.prize) competition.prize = data.prize;

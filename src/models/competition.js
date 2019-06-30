@@ -12,6 +12,9 @@ const Competition = mongoose.model('Competition', {
 	description: {
 		type: String
 	},
+	organization: {
+		type: String
+	},
 	deadline: {
 		type: String
 	},
