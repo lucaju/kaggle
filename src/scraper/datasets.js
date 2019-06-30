@@ -1,24 +1,54 @@
 const chalk = require('chalk');
+const {logError} = require('../logs/datalog');
 
 const url ='https://www.kaggle.com/datasets';
 
-const collectDatasets = async (page) => {
+const collectDatasets = async page => {
 
 	const collection = [];
 
 	console.log('\r');
 	console.log(chalk.green.bold('Collecting Datasets'));
 
-	await page.goto(url);
-	// await page.waitFor(1 * 1000);
-	await page.waitFor('.datasets__list-wrapper');
+	try {
 
-	//get list of items
-	const items = await page.$$('.datasets__list-wrapper ul li');
+		//load page
+		await page.goto(url);
+		await page.waitFor('.datasets__list-wrapper');
 
-	let rank = 1;
+		//get list of items
+		const items = await page.$$('.datasets__list-wrapper ul li');
+		console.log(chalk.grey(`[${items.length}]`));
 
-	for (const item of items) {
+		//ranking
+		let rank = 1;
+
+		for (const item of items) {
+			const dataset = await getDetails(item, rank, page);
+			if (dataset) collection.push(dataset);
+
+			//scroll page
+			await page.waitFor(0.5 * 1000);
+			page.evaluate( () => {
+				window.scrollBy(0, 89);
+			});
+
+			//upadate ranking
+			rank += 1;
+		}
+
+		return collection;
+
+	} catch(err) {
+		console.log(`Scraping: Datasets: Something is wrong with the scraping in Datasets: ${err}`);
+		logError(`Scraping: Datasets: Something is wrong with the scraping in Datasets: ${err}`);
+		return null;
+	}
+};
+
+const getDetails = async (item, rank, page) => {
+
+	try {
 
 		//Scrape the main info
 		const title = await item.$eval('div > div > h3', content => content.innerHTML);
@@ -91,7 +121,7 @@ const collectDatasets = async (page) => {
 		// ------
 
 		//put into an object 
-		const dataset = {
+		return {
 			title,
 			endpoint,
 			description,
@@ -110,23 +140,12 @@ const collectDatasets = async (page) => {
 			}
 		};
 
-		//add to array
-		collection.push(dataset);
-
-		await page.waitFor(0.5 * 1000);
-		page.evaluate( () => {
-			window.scrollBy(0, 89);
-		});
-
-
-		rank += 1;
-
+	} catch (err) {
+		console.log(`Scraping: Dataset: Something is wrong with one of the datasets: ${err}`);
+		logError(`Scraping: Dataset: Something is wrong with one of the datasets: ${err}`);
+		return null;
 	}
 
-	//log collection
-	// console.log(collection);
-
-	return collection;
 };
 
 

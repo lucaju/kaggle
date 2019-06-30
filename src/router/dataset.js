@@ -1,6 +1,8 @@
 const Dataset = require('../models/dataset');
 const chalk = require('chalk');
 
+const {logMessage, logError} = require('../logs/datalog');
+
 const addDatasets = async collection => {
 
 	console.log(chalk.grey('\nSaving into database...'));
@@ -22,6 +24,8 @@ const addDatasets = async collection => {
 
 	}
 
+	logMessage(`Success: ${itemsAdded} users added. ${itemsUpdated} users updated.`);
+
 	console.log(
 		chalk.keyword('olive')(`${itemsAdded} datasets added.`),
 		chalk.keyword('orange')(`${itemsUpdated} datasets updated.`)
@@ -30,21 +34,17 @@ const addDatasets = async collection => {
 };
 
 const findDatasetByTitle = async title => {
-	try {
-		return await Dataset.findOne({title});
-	} catch (err) {
-		console.log(err);
-	}
+	return await Dataset.findOne({title});
 };
 
 const addDataset = async data => {
 	const dataset = new Dataset(data);
 	
 	try {
-		await dataset.save();
-		return dataset;
-	} catch (e) {
-		console.log(e);
+		return await dataset.save();
+	} catch (err) {
+		console.log(`MongoDB did not inserted dataset ${dataset.title}: ${err}`);
+		logError(`MongoDB did not inserted dataset ${dataset.title}: ${err}`);
 	}
 };
 
@@ -65,8 +65,9 @@ const updateDataset = async (datatset, data) => {
 
 	try {
 		return await datatset.save();
-	} catch (e) {
-		console.log(e);
+	} catch (err) {
+		console.log(`MongoDB did not update dataset ${datatset.title}: ${err}`);
+		logError(`MongoDB did not update dataset ${datatset.title}: ${err}`);
 	}
 };
 

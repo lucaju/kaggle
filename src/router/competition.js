@@ -1,6 +1,8 @@
 const Competition = require('../models/competition');
 const chalk = require('chalk');
 
+const {logMessage, logError} = require('../logs/datalog');
+
 const addCompetitions = async collection => {
 
 	console.log(chalk.grey('\nSaving into database...'));
@@ -22,6 +24,8 @@ const addCompetitions = async collection => {
 
 	}
 
+	logMessage(`Success: ${itemsAdded} users added. ${itemsUpdated} users updated.`);
+
 	console.log(
 		chalk.keyword('olive')(`${itemsAdded} competitions added.`),
 		chalk.keyword('orange')(`${itemsUpdated} competitions updated.`)
@@ -29,20 +33,17 @@ const addCompetitions = async collection => {
 };
 
 const findUserByTitle = async title => {
-	try {
-		return await Competition.findOne({title});
-	} catch (err) {
-		console.log(err);
-	}
+	return await Competition.findOne({title});
 };
 
 const addCompetition = async data => {
-	const competion = new Competition(data);
+	const competition = new Competition(data);
 	
 	try {
-		return await competion.save();
-	} catch (e) {
-		console.log(e);
+		return await competition.save();
+	} catch (err) {
+		console.log(`MongoDB did not inserted competition ${competition.title}: ${err}`);
+		logError(`MongoDB did not inserted competition ${competition.title}: ${err}`);
 	}
 };
 
@@ -58,8 +59,9 @@ const updateCompetition = async (competition, data) => {
 
 	try {
 		return await competition.save();
-	} catch (e) {
-		console.log(e);
+	} catch (err) {
+		console.log(`MongoDB did not update competition ${competition.title}: ${err}`);
+		logError(`MongoDB did not update competition ${competition.title}: ${err}`);
 	}
 };
 

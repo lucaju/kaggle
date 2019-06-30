@@ -1,6 +1,8 @@
 const User = require('../models/user');
 const chalk = require('chalk');
 
+const {logMessage, logError} = require('../logs/datalog');
+
 const addUsers = async collection => {
 
 	console.log(chalk.grey('\nSaving into database...'));
@@ -21,18 +23,17 @@ const addUsers = async collection => {
 		}
 	}
 
+	logMessage(`Success: ${itemsAdded} users added. ${itemsUpdated} users updated.`);
+
 	console.log(
 		chalk.keyword('olive')(`${itemsAdded} users added.`),
 		chalk.keyword('orange')(`${itemsUpdated} users updated.`)
 	);
+
 };
 
 const findUserByName = async name => {
-	try {
-		return await User.findOne({name});
-	} catch (err) {
-		console.log(err);
-	}
+	return await User.findOne({name});
 };
 
 const addUser = async data => {
@@ -40,8 +41,9 @@ const addUser = async data => {
 
 	try {
 		return await user.save();
-	} catch (e) {
-		console.log(e);
+	} catch (err) {
+		console.log(`MongoDB did not inserted user ${user.name}: ${err}`);
+		logError(`MongoDB did not inserted user ${user.name}: ${err}`);
 	}
 };
 
@@ -56,8 +58,9 @@ const updateUser = async (user, data) => {
 
 	try {
 		return await user.save();
-	} catch (e) {
-		console.log(e);
+	} catch (err) {
+		console.log(`MongoDB did not update user ${user.name}: ${err}`);
+		logError(`MongoDB did not update user ${user.name}: ${err}`);
 	}
 };
 

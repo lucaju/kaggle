@@ -1,8 +1,9 @@
 const chalk = require('chalk');
+const {logError} = require('../logs/datalog');
 
 const url ='https://www.kaggle.com/competitions';
 
-let rank = 1;
+
 
 const collectCompetitions = async (page) => {
 
@@ -11,16 +12,36 @@ const collectCompetitions = async (page) => {
 	console.log('\n');
 	console.log(chalk.green.bold('Collecting Competitions'));
 
-	await page.goto(url);
-	// await page.waitFor(1 * 1000);
-	await page.waitFor('.smart-list__content');
+	try {
+		await page.goto(url);
+		// await page.waitFor(1 * 1000);
+		await page.waitFor('.smart-list__content');
 
-	//get list of items
-	const items = await page.$$('.smart-list__content .sc-cItKUH');
-	console.log(items.length);
+		//get list of items
+		const items = await page.$$('.smart-list__content .sc-cItKUH');
+		console.log(chalk.grey(`[${items.length}]`));
 
-	for (const item of items) {
-		
+		//ranking
+		let rank = 1;
+
+		for (const item of items) {
+			const competition = await getDetails(item, rank);
+			if (competition) collection.push(competition);
+			rank += 1; 	//update ranking
+		}
+
+		return collection;
+
+	} catch(err) {
+		console.log(`Scraping: Competition: Something is wrong with the scraping in Competions: ${err}`);
+		logError(`Scraping: Competition: Something is wrong with the scraping in Competions: ${err}`);
+		return null;
+	}
+};
+
+const getDetails = async (item,rank) => {
+
+	try {
 		const title = await item.$eval('div > div:first-child > a', content => content.innerText);
 		console.log(`:: ${title}`);
 
@@ -50,7 +71,7 @@ const collectCompetitions = async (page) => {
 		}
 
 		//put into an object 
-		const competition = {
+		return {
 			title,
 			endpoint,
 			description,
@@ -65,17 +86,12 @@ const collectCompetitions = async (page) => {
 			}
 		};
 
-		//add to array
-		collection.push(competition);
-
-		rank += 1;
+	} catch (err) {
+		console.log(`Scraping: Competion: Something is wrong with one of the competitions: ${err}`);
+		logError(`Scraping: Competion: Something is wrong with one of the competitions: ${err}`);
+		return null;
 	}
-
-	// console.log(collection);
-
-	return collection;
-};
-
+}
 
 module.exports = {
 	collectCompetitions,

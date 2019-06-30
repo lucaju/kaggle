@@ -1,8 +1,9 @@
 const chalk = require('chalk');
-const {DateTime} = require('luxon');
 const puppeteer = require('puppeteer');
-// const util = require('util');
+
 const mongoose = require('./src/db/mongoose');
+
+const {sendLogEmail} = require('./src/emails/sendEmail');
 
 const {collectDatasets} = require('./src/scraper/datasets');
 const {collectUsers} = require('./src/scraper/users');
@@ -12,27 +13,27 @@ const {addUsers} = require('./src/router/user');
 const {addDatasets} = require('./src/router/dataset');
 const {addCompetitions} = require('./src/router/competition');
 
-
 const targets = [
 	'datasets',
 	'competitions',
 	'users'
 ];
-let browser;
 
 const run = async () => {
 
-	const now = DateTime.local();
-	console.log(chalk.blue(`Scraping Kaggle: ${now.toFormat('yyyy LLL dd')}`));
+	const date = new Date();
+	console.log(chalk.blue(`Scraping Kaggle: ${date}`));
+	
 
 	//lunch puppeteer
-	browser = await puppeteer.launch({
+	const browser = await puppeteer.launch({
 		headless: true,
 		defaultViewport: {
 			width: 1200,
 			height: 1000
 		},
 	});
+
 	console.log(chalk.gray('Puppeteer Launched'));
 
 	//open new tab
@@ -42,27 +43,35 @@ const run = async () => {
 	for (const target of targets) {
 		if (target == 'datasets') {
 			const collection = await collectDatasets(page);
-			await addDatasets(collection);
+			if (collection) await addDatasets(collection);
 		} else if (target == 'competitions') {
 			const collection = await collectCompetitions(page);
-			await addCompetitions(collection);
+			if (collection) await addCompetitions(collection);
 		} else if (target == 'users') {
 			const collection = await collectUsers(page);
-			await addUsers(collection);
+			if (collection) await addUsers(collection);
 		}
 	}
 
 
+	// close pupeteer and mongoose
+	await page.waitFor(0.2 * 1000);
+	await browser.close();
+	mongoose.close();
+
+	//send log email
+	try {
+		await sendLogEmail();
+		console.log('Log email sent.');
+	} catch (err) {
+		console.log(`Email not sent: ${err}`);
+	}
+
 	//done
 	console.log('\n');
 	console.log(chalk.blue('Done'));
-	await page.waitFor(0.5 * 1000);
-	await browser.close();
-
-	mongoose.close();
+	
 };
-
-
 
 
 run();

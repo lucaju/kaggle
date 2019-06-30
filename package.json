@@ -5,8 +5,7 @@
 	"description": "Scraper for Kaggle",
 	"main": "index.js",
 	"scripts": {
-		"start": "node index.js",
-		"dev": "nodemen index.js"
+		"start": "env-cmd node index.js"
 	},
 	"repository": {
 		"type": "git",
@@ -19,12 +18,13 @@
 		"Scraper"
 	],
 	"dependencies": {
+		"@sendgrid/mail": "^6.4.0",
 		"chalk": "^2.4.2",
-		"luxon": "^1.16.0",
 		"mongoose": "^5.6.2",
 		"puppeteer": "^1.18.1"
 	},
 	"devDependencies": {
+		"env-cmd": "^9.0.3",
 		"eslint": "^6.0.1"
 	}
 }
