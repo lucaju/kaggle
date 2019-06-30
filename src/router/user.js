@@ -23,7 +23,7 @@ const addUsers = async collection => {
 		}
 	}
 
-	logMessage(`Success: ${itemsAdded} users added. ${itemsUpdated} users updated.`);
+	logMessage(`USERS: ${itemsAdded} users added. ${itemsUpdated} users updated.`);
 
 	console.log(
 		chalk.keyword('olive')(`${itemsAdded} users added.`),

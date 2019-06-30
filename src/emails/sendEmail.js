@@ -23,8 +23,8 @@ const composeMessage = (date) => {
 
 	const title = `Scraping Kaggle: ${date}`;
 
-	const msgs = getMessages('Logs', messagesLog);
-	const error = getMessages('Erros', errorsLog);
+	const msgs = getMessages('Log', messagesLog);
+	const error = getMessages('Errors', errorsLog);
 
 	return `
 	<body>

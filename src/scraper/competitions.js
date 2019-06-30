@@ -4,7 +4,6 @@ const {logError} = require('../logs/datalog');
 const url ='https://www.kaggle.com/competitions';
 
 
-
 const collectCompetitions = async (page) => {
 
 	const collection = [];
