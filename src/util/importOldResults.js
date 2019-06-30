@@ -1,5 +1,6 @@
 const chalk = require('chalk');
 const fs = require('fs');
+const util = require('util');
 const mongoose = require('../db/mongoose');
 const { DateTime } = require('luxon');
 
@@ -7,6 +8,7 @@ const {addUsers} = require('../router/user');
 const {addDatasets} = require('../router/dataset');
 const {addCompetitions} = require('../router/competition');
 
+const readFile = util.promisify(fs.readFile);
 const folder = './results';
 
 const targets = [
@@ -24,7 +26,7 @@ const targets = [
 		type: 'competitions',
 		startDate: DateTime.local(2019,2,16),
 		endDate: DateTime.local(2019,6,9)
-	},
+	}
 ];
 
 const run = async () => {
@@ -32,7 +34,11 @@ const run = async () => {
 	console.log(chalk.blue('Importing old results'));
 	
 	for (const target of targets) {
-		await importData(target);
+		console.log(chalk.green(`\nImporting ${target.type}`));
+		console.log('Cheking available dates');
+
+		const files = checkAvailableDates(target);
+		await importData(target, files);
 	}
 
 	mongoose.close();
@@ -42,17 +48,12 @@ const run = async () => {
 
 };
 
-const importData = async ({type, startDate, endDate}) => {
-
-	console.log(chalk.green(`\nImporting ${type}`));
+const checkAvailableDates = ({type, startDate, endDate}) => {
 
 	let date = startDate;
 	let fileName;
-
-	//available dates
-	console.log('Cheking available dates');
-
 	let files = [];
+
 	while (date < endDate) {
 		fileName = `kaggle-top-${type}-${date.toISODate()}.json`;
 		if (fs.existsSync(`${folder}/${fileName}`)) {
@@ -76,13 +77,19 @@ const importData = async ({type, startDate, endDate}) => {
 		date = date.plus({days:1});
 	}
 
+	return files;
+
+};
+
+const importData = async ({type}, files) => {
+
 	//loop through files
 	console.log('\nLoading data');
 	for (const file of files) {
 
 		console.log(chalk.keyword('dodgerblue')(`:: ${file}`));
 
-		const rawdata = fs.readFileSync(`${folder}/${fileName}`);
+		const rawdata = await readFile(`${folder}/${file}`);
 		const data = JSON.parse(rawdata);
 
 		let collection;
