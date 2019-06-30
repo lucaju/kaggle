@@ -19,7 +19,7 @@ const targets = [
 	'users'
 ];
 
-const sendEmail = false;
+const sendEmail = true;
 
 const run = async () => {
 
