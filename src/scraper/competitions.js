@@ -65,6 +65,7 @@ const getDetails = async (item,rank) => {
 		try {
 			teamsTotal = await item.$eval('div > div .sc-cfHlVB > span', content => content.innerText);
 			teamsTotal = teamsTotal.split(' ')[0];
+			teamsTotal = teamsTotal.replace(/,/g, '');
 		} catch (err) {
 			teamsTotal = '';
 		}

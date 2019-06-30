@@ -218,12 +218,12 @@ const parseCompetitions = ({date, data}) => {
 		}
 
 		//crate obj
-		const dataset = {
+		const competition = {
 			title: item.competitionTitle,
 			endpoint: item.competitionUrl,
 			description: item.competitionDescription,
 			deadline: item.deadline,
-			type: item.hostSegment,
+			type: item.hostSegmentTitle,
 			tags: tags,
 			prize: item.rewardDisplay,
 			teamsTotal: item.totalTeams,
@@ -237,7 +237,7 @@ const parseCompetitions = ({date, data}) => {
 
 		rank += 1; 	//update ranking
 
-		collection.push(dataset);
+		collection.push(competition);
 	}
 
 	return collection;
