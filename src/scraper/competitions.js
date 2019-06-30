@@ -91,7 +91,7 @@ const getDetails = async (item,rank) => {
 		logError(`Scraping: Competion: Something is wrong with one of the competitions: ${err}`);
 		return null;
 	}
-}
+};
 
 module.exports = {
 	collectCompetitions,
