@@ -133,7 +133,7 @@ const parseUsers = ({date, data}) => {
 				bronze: item.totalBronzeMedals
 			},
 			rank: {
-				date: date,
+				date: new Date(date),
 				rank: item.currentRanking
 			},
 			addAt: date
