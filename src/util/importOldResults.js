@@ -1,3 +1,5 @@
+
+require('dotenv').config();
 const chalk = require('chalk');
 const fs = require('fs');
 const util = require('util');
@@ -54,7 +56,7 @@ const checkAvailableDates = ({type, startDate, endDate}) => {
 	let fileName;
 	let files = [];
 
-	while (date < endDate) {
+	while (date <= endDate) {
 		fileName = `kaggle-top-${type}-${date.toISODate()}.json`;
 		if (fs.existsSync(`${folder}/${fileName}`)) {
 			files.push(fileName);
