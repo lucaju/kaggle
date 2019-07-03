@@ -20,8 +20,6 @@ const targets = [
 	'users'
 ];
 
-// const sendEmail = true;
-
 const run = async () => {
 
 	const date = new Date();
