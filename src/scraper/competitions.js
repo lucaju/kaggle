@@ -12,21 +12,34 @@ const collectCompetitions = async (page) => {
 	console.log(chalk.green.bold('Collecting Competitions'));
 
 	try {
+
 		await page.goto(url);
-		// await page.waitFor(1 * 1000);
 		await page.waitFor('.smart-list__content');
 
 		//get list of items
-		const items = await page.$$('.smart-list__content .sc-cItKUH');
+		const items = await page.$$('.smart-list__content > div > div');
+		
+		if (items.length == 0) {
+			console.log(chalk.red('Scraping: Competition: List of items return 0'));
+			logError('Scraping: Competition: List of items return 0');
+			return null;
+		}
 		console.log(chalk.grey(`[${items.length}]`));
 
 		//ranking
 		let rank = 1;
 
 		for (const item of items) {
-			const competition = await getDetails(item, rank);
-			if (competition) collection.push(competition);
-			rank += 1; 	//update ranking
+			const isCompetion = await item.$('div > div:first-child > a');
+
+			if (isCompetion) {
+				const competition = await getDetails(item, rank);
+				if (competition) {
+					collection.push(competition);
+					rank += 1; 	//update ranking
+				}
+			}
+
 		}
 
 		return collection;

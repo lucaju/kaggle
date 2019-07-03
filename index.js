@@ -20,13 +20,24 @@ const targets = [
 	'users'
 ];
 
-const sendEmail = true;
+// const sendEmail = true;
 
 const run = async () => {
 
 	const date = new Date();
 	console.log(chalk.blue(`Scraping Kaggle: ${date}`));
+
+	if (await mongoose.connect()) await scrape();
+
+	//send log email
+	sendEmail();
+
+	//done
+	console.log(chalk.blue('\nDone'));
 	
+};
+
+const scrape = async () => {
 
 	//lunch puppeteer
 	const browser = await puppeteer.launch({
@@ -56,26 +67,20 @@ const run = async () => {
 		}
 	}
 
-
 	// close pupeteer and mongoose
 	await page.waitFor(0.2 * 1000);
 	await browser.close();
 	mongoose.close();
+};
 
-	//send log email
-	if (sendEmail) {
-		try {
-			await sendLogEmail();
-			console.log('Log email sent.');
-		} catch (err) {
-			console.log(`Email not sent: ${err}`);
-		}
+
+const sendEmail = async () => {
+	try {
+		await sendLogEmail();
+		console.log('Log email sent.');
+	} catch (err) {
+		console.log(`Email not sent: ${err}`);
 	}
-
-	//done
-	console.log('\n');
-	console.log(chalk.blue('Done'));
-	
 };
 
 
