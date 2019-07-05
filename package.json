@@ -1,6 +1,6 @@
 {
 	"name": "scraper-kaggle",
-	"version": "0.2.0",
+	"version": "0.2.1",
 	"description": "Scraper for Kaggle",
 	"main": "index.js",
 	"scripts": {
