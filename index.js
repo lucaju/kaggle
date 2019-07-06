@@ -10,9 +10,9 @@ const {collectDatasets} = require('./src/scraper/datasets');
 const {collectUsers} = require('./src/scraper/users');
 const {collectCompetitions} = require('./src/scraper/competitions');
 
-const {addUsers} = require('./src/router/user');
-const {addDatasets} = require('./src/router/dataset');
-const {addCompetitions} = require('./src/router/competition');
+const {addRanking} = require('./src/router/ranking');
+
+
 
 const targets = [
 	'datasets',
@@ -53,22 +53,29 @@ const scrape = async () => {
 
 	//loop through the pages to scrape
 	for (const target of targets) {
-		if (target == 'datasets') {
-			const collection = await collectDatasets(page);
-			if (collection) await addDatasets(collection);
-		} else if (target == 'competitions') {
-			const collection = await collectCompetitions(page);
-			if (collection) await addCompetitions(collection);
-		} else if (target == 'users') {
-			const collection = await collectUsers(page);
-			if (collection) await addUsers(collection);
-		}
+		const collection = await getCollection(target,page);
+		if (collection) await addRanking(target,collection);
 	}
 
 	// close pupeteer and mongoose
 	await page.waitFor(0.2 * 1000);
 	await browser.close();
 	mongoose.close();
+};
+
+const getCollection = async (target, page) => {
+
+	let collection = [];
+
+	if (target == 'datasets') {
+		collection = await collectDatasets(page);
+	} else if (target == 'competitions') {
+		collection = await collectCompetitions(page);
+	} else if (target == 'users') {
+		collection = await collectUsers(page);		
+	}
+
+	return collection;
 };
 
 
@@ -80,6 +87,5 @@ const sendEmail = async () => {
 		console.log(`Email not sent: ${err}`);
 	}
 };
-
 
 run();

@@ -1,28 +1,34 @@
 const mongoose = require('mongoose');
 
-const Dataset = mongoose.model('Dataset', {
+const datasetSchema = mongoose.Schema({
 	title: {
 		type: String,
-		required: true
+		required: true,
+		trim: true
 	},
 	endpoint: {
 		type: String,
-		required: true
+		required: true,
+		trim: true
 	},
 	description: {
-		type: String
+		type: String,
+		trim: true
 	},
-	createdAt: {
+	uploadedAt: {
 		type: Date
 	},
 	owner: {
-		type: String
-	},
-	userEndpoint: {
 		type: String,
+		trim: true
+	},
+	ownerEndpoint: {
+		type: String,
+		trim: true
 	},
 	license: {
-		type: String
+		type: String,
+		trim: true
 	},
 	usability: {
 		type: Number
@@ -46,15 +52,23 @@ const Dataset = mongoose.model('Dataset', {
 	upvotes: {
 		type: Number
 	},
-	rank: {
-		type: Array,
-		default: []
-	},
-	addAt: {
-		type: Date,
-		default: Date.now()
-	},
+}, {
+	timestamps: true
 });
+
+datasetSchema.virtual('ranking', {
+	ref: 'DatasetRanking',
+	localField: '_id',
+	foreignField: 'dataset'
+});
+
+datasetSchema.methods.toJSON = function () {
+	const dataset = this;
+	const obj = dataset.toObject();
+	return obj;
+};
+
+const Dataset = mongoose.model('Dataset', datasetSchema);
 
 module.exports = Dataset;
 

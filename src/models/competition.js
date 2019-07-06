@@ -1,25 +1,31 @@
 const mongoose = require('mongoose');
 
-const Competition = mongoose.model('Competition', {
+const competitionSchema = mongoose.Schema({
 	title: {
 		type: String,
-		required: true
+		required: true,
+		trim: true
 	},
 	endpoint: {
 		type: String,
-		required: true
+		required: true,
+		trim: true
 	},
 	description: {
-		type: String
+		type: String,
+		trim: true
 	},
 	organization: {
-		type: String
+		type: String,
+		trim: true
 	},
 	deadline: {
-		type: String
+		type: String,
+		trim: true
 	},
 	type: {
-		type: String
+		type: String,
+		trim: true
 	},
 	tags: {
 		type: Array,
@@ -27,19 +33,29 @@ const Competition = mongoose.model('Competition', {
 	},
 	prize: {
 		type: String,
+		trim: true
 	},
 	teamsTotal: {
-		type: String
+		type: String,
+		trim: true
 	},
-	rank: {
-		type: Array,
-		default: []
-	},
-	addAt: {
-		type: Date,
-		default: Date.now()
-	},
+}, {
+	timestamps: true
 });
+
+competitionSchema.virtual('ranking', {
+	ref: 'CompetitionRanking',
+	localField: '_id',
+	foreignField: 'competition'
+});
+
+competitionSchema.methods.toJSON = function () {
+	const competition = this;
+	const obj = competition.toObject();
+	return obj;
+};
+
+const Competition = mongoose.model('Competition', competitionSchema);
 
 module.exports = Competition;
 

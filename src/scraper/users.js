@@ -73,10 +73,12 @@ const getDetails = async item => {
 				silver,
 				bronze
 			},
-			rank: {
-				date: new Date(),
-				rank,
-			}
+			rank
+			// rank: {
+			// 	date: new Date(),
+			// 	rank,
+			// }
+			
 		};
 
 	} catch (err) {

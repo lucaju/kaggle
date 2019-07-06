@@ -1,19 +1,23 @@
 const mongoose = require('mongoose');
 
-const User = mongoose.model('User', {
+const userSchema = mongoose.Schema({
 	name: {
 		type: String,
-		required: true
+		required: true,
+		trim: true
+		
 	},
 	endpoint: {
 		type: String,
-		required: true
+		required: true,
+		trim: true
 	},
 	joinedDate: {
 		type: Date
 	},
 	tier: {
-		type: String
+		type: String,
+		trim: true
 	},
 	points: {
 		type: Number
@@ -29,15 +33,23 @@ const User = mongoose.model('User', {
 			type: Number
 		},
 	},
-	addAt: {
-		type: Date,
-		default: Date.now()
-	},
-	rank: {
-		type: Array,
-		default: []
-	},
+}, {
+	timestamps: true
 });
+
+userSchema.virtual('ranking', {
+	ref: 'UserRanking',
+	localField: '_id',
+	foreignField: 'user'
+});
+
+userSchema.methods.toJSON = function () {
+	const user = this;
+	const obj = user.toObject();
+	return obj;
+};
+
+const User = mongoose.model('User', userSchema);
 
 module.exports = User;
 

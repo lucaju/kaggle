@@ -76,7 +76,7 @@ const getDetails = async (item,rank) => {
 
 		let teamsTotal = '';
 		try {
-			teamsTotal = await item.$eval('div > div .sc-cfHlVB > span', content => content.innerText);
+			teamsTotal = await item.$eval('div > div:last-child > div:last-child > span:last-child ', content => content.innerHTML);
 			teamsTotal = teamsTotal.split(' ')[0];
 			teamsTotal = teamsTotal.replace(/,/g, '');
 		} catch (err) {
@@ -93,10 +93,7 @@ const getDetails = async (item,rank) => {
 			tags,
 			prize,
 			teamsTotal,
-			rank: {
-				date: new Date(),
-				rank: rank
-			}
+			rank,
 		};
 
 	} catch (err) {

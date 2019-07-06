@@ -54,7 +54,7 @@ const getDetails = async (item, rank, page) => {
 
 		const owner = await item.$eval('div > div > div > a > span ', content => content.innerText);
 		const endpoint = await item.$eval('a', content => content.getAttribute('href'));
-		const userEndpoint = await item.$eval('div > div > div > a', content => content.getAttribute('href'));
+		const ownerEndpoint = await item.$eval('div > div > div > a', content => content.getAttribute('href'));
 
 		let filesize = await item.$eval('div > div > div:last-child > span:nth-child(2)', content => content.innerText);
 		filesize = filesize.split(' ');
@@ -110,8 +110,8 @@ const getDetails = async (item, rank, page) => {
 
 		const modalMeta = await page.$('div .mdc-dialog__surface > div .sc-cCVOAp');
 		
-		let createdAt = await modalMeta.$eval('span:nth-of-type(1)', content => content.innerText);
-		createdAt = createdAt.split('\n')[1];
+		let uploadedAt = await modalMeta.$eval('span:nth-of-type(1)', content => content.innerText);
+		uploadedAt = uploadedAt.split('\n')[1];
 
 		const license = await modalMeta.$eval('span:nth-of-type(3) > span:nth-of-type(2)', content => content.innerText);
 		const tags = await modalMeta.$$eval('span:nth-of-type(4) div div', content => content.map(n => n.innerText));
@@ -125,19 +125,16 @@ const getDetails = async (item, rank, page) => {
 			title,
 			endpoint,
 			description,
-			createdAt,
+			uploadedAt,
 			owner,
-			userEndpoint,
+			ownerEndpoint,
 			license,
 			usability,
 			size,
 			files,
 			tags,
 			upvotes,
-			rank: {
-				date: new Date(),
-				rank: rank
-			}
+			rank
 		};
 
 	} catch (err) {

@@ -2,25 +2,15 @@ const Competition = require('../models/competition');
 const chalk = require('chalk');
 const {logMessage, logError} = require('../logs/datalog');
 
+let itemsAdded = 0;
+let itemsUpdated = 0;
+
 const addCompetitions = async collection => {
 
 	console.log(chalk.grey('\nSaving into database...'));
 
-	let itemsAdded = 0;
-	let itemsUpdated = 0;
-
 	for (const data of collection) {
-
-		const competition = await findUserByTitle(data.title);
-
-		if (!competition) {
-			const newItem = await addCompetition(data);
-			if (newItem) itemsAdded += 1;
-		} else {
-			const itemUpdated = await updateCompetition(competition, data);
-			if (itemUpdated) itemsUpdated += 1;
-		}
-
+		await addCompetition(data)
 	}
 
 	logMessage(`COMPETITIONS: ${itemsAdded} added. ${itemsUpdated} updated.`);
@@ -36,6 +26,22 @@ const findUserByTitle = async title => {
 };
 
 const addCompetition = async data => {
+	
+	let competition = await findUserByTitle(data.title);
+
+	if (!competition) {
+		competition = await insertCompetition(data);
+		if (competition) itemsAdded++;
+	} else {
+		competition = await updateCompetition(competition, data);
+		if (competition) itemsUpdated++;
+	}
+
+	return competition;
+
+};
+
+const insertCompetition = async data => {
 	const competition = new Competition(data);
 	
 	try {
@@ -55,7 +61,6 @@ const updateCompetition = async (competition, data) => {
 	if (data.tags.length > 0 && competition.tags.join() != data.tags.join()) competition.tags = data.tags;
 	if (data.prize != '' && competition.prize != data.prize) competition.prize = data.prize;
 	if (data.teamsTotal && competition.teamsTotal != data.teamsTotal) competition.teamsTotal = data.teamsTotal;
-	if (data.rank) competition.rank.push(data.rank);
 
 	try {
 		return await competition.save();
@@ -65,7 +70,15 @@ const updateCompetition = async (competition, data) => {
 	}
 };
 
+const getLogCompetitions = () => {
+	return {
+		itemsAdded,
+		itemsUpdated
+	};
+};
+
 module.exports = {
 	addCompetitions,
-	addCompetition
+	addCompetition,
+	getLogCompetitions
 };

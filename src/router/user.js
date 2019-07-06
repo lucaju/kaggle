@@ -1,26 +1,16 @@
 const User = require('../models/user');
 const chalk = require('chalk');
-
 const {logMessage, logError} = require('../logs/datalog');
+
+let itemsAdded = 0;
+let itemsUpdated = 0;
 
 const addUsers = async collection => {
 
 	console.log(chalk.grey('\nSaving into database...'));
 
-	let itemsAdded = 0;
-	let itemsUpdated = 0;
-
 	for (const data of collection) {
-		
-		const user = await findUserByName(data.name);
-
-		if (!user) {
-			const newItem = await addUser(data);
-			if (newItem) itemsAdded += 1;
-		} else {
-			const itemUpdated = await updateUser(user, data);
-			if (itemUpdated) itemsUpdated += 1;
-		}
+		await addUser(data);
 	}
 
 	logMessage(`USERS: ${itemsAdded} added. ${itemsUpdated} updated.`);
@@ -37,6 +27,22 @@ const findUserByName = async name => {
 };
 
 const addUser = async data => {
+
+	let user = await findUserByName(data.name);
+
+	if (!user) {
+		user = await inserUser(data);
+		if (user) itemsAdded++;
+	} else {
+		user = await updateUser(user, data);
+		if (user) itemsUpdated++;
+	}
+
+	return user;
+
+};
+
+const inserUser = async data => {
 	const user = new User(data);
 
 	try {
@@ -54,8 +60,7 @@ const updateUser = async (user, data) => {
 	if (data.medals.gold && user.medals.gold != data.medals.gold) user.medals.gold = data.medals.gold;
 	if (data.medals.silver && user.medals.silver != data.medals.silver) user.medals.silver = data.medals.silver;
 	if (data.medals.bronze && user.medals.bronze != data.medals.bronze) user.medals.bronze = data.medals.bronze;
-	if (data.rank) user.rank.push(data.rank);
-
+	
 	try {
 		return await user.save();
 	} catch (err) {
@@ -64,8 +69,16 @@ const updateUser = async (user, data) => {
 	}
 };
 
+const getLogUsers = () => {
+	return {
+		itemsAdded,
+		itemsUpdated
+	};
+};
+
 
 module.exports = {
 	addUsers,
-	addUser
+	addUser,
+	getLogUsers
 };

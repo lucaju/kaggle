@@ -5,7 +5,8 @@
 	"main": "index.js",
 	"scripts": {
 		"start": "env-cmd node index",
-		"dev-import": "env-cmd node src/util/importOldResults"
+		"dev-import": "env-cmd node src/util/import",
+		"dev-import-old": "env-cmd node src/util/importOldResults"
 	},
 	"repository": {
 		"type": "git",

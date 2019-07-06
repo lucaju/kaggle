@@ -1,27 +1,16 @@
 const Dataset = require('../models/dataset');
 const chalk = require('chalk');
-
 const {logMessage, logError} = require('../logs/datalog');
+
+let itemsAdded = 0;
+let itemsUpdated = 0;
 
 const addDatasets = async collection => {
 
 	console.log(chalk.grey('\nSaving into database...'));
 
-	let itemsAdded = 0;
-	let itemsUpdated = 0;
-
 	for (const data of collection) {
-
-		const dataset = await findDatasetByTitle(data.title);
-
-		if (!dataset) {
-			const newItem = await addDataset(data);
-			if (newItem) itemsAdded += 1;
-		} else {
-			const itemUpdated = await updateDataset(dataset, data);
-			if (itemUpdated) itemsUpdated += 1;
-		}
-
+		await addDataset(data);
 	}
 
 	logMessage(`DATASETS: ${itemsAdded} added. ${itemsUpdated} updated.`);
@@ -38,6 +27,22 @@ const findDatasetByTitle = async title => {
 };
 
 const addDataset = async data => {
+	
+	let dataset = await findDatasetByTitle(data.title);
+
+	if (!dataset) {
+		dataset = await insertDataset(data);
+		if (dataset) itemsAdded++;
+	} else {
+		dataset = await updateDataset(dataset, data);
+		if (dataset) itemsUpdated++;
+	}
+
+	return dataset;
+
+};
+
+const insertDataset = async data => {
 	const dataset = new Dataset(data);
 	
 	try {
@@ -61,8 +66,6 @@ const updateDataset = async (datatset, data) => {
 	if (data.tags.length > 0 && datatset.tags.join() != data.tags.join()) datatset.tags = data.tags;
 	if (data.upvotes && datatset.upvotes != data.upvotes) datatset.upvotes = data.upvotes;
 
-	if (data.rank) datatset.rank.push(data.rank);
-
 	try {
 		return await datatset.save();
 	} catch (err) {
@@ -71,7 +74,15 @@ const updateDataset = async (datatset, data) => {
 	}
 };
 
+const getLogDatasets = () => {
+	return {
+		itemsAdded,
+		itemsUpdated
+	};
+};
+
 module.exports = {
 	addDatasets,
-	addDataset
+	addDataset,
+	getLogDatasets
 };

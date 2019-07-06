@@ -6,12 +6,15 @@ const util = require('util');
 const mongoose = require('../db/mongoose');
 const { DateTime } = require('luxon');
 
-const {addUsers} = require('../router/user');
-const {addDatasets} = require('../router/dataset');
-const {addCompetitions} = require('../router/competition');
+const {addUser} = require('../router/user');
+const {addDataset} = require('../router/dataset');
+const {addCompetition} = require('../router/competition');
+const {addDay} = require('../router/ranking');
+const {UserRanking, CompetitionRanking, DatasetRanking} = require('../models/ranking');
+
 
 const readFile = util.promisify(fs.readFile);
-const folder = './results';
+const folder = './pastresults/json';
 
 const targets = [
 	{
@@ -32,6 +35,8 @@ const targets = [
 ];
 
 const run = async () => {
+
+	await mongoose.connect();
 
 	console.log(chalk.blue('Importing old results'));
 	
@@ -94,66 +99,88 @@ const importData = async ({type}, files) => {
 		const rawdata = await readFile(`${folder}/${file}`);
 		const data = JSON.parse(rawdata);
 
-		let collection;
-
 		if (type == 'users') {
-			collection = parseUsers(data);
-			await addUsers(collection);
+			await parseUsers(data);
 		} else if (type == 'datasets') {
-			collection = parseDatasets(data);
-			await addDatasets(collection);
+			await parseDatasets(data);
 		} else if (type == 'competitions') {
-			collection = parseCompetitions(data);
-			await addCompetitions(collection);
+			await parseCompetitions(data);
 		}
 
 		console.log(chalk.gray('-----'));
 
 	}
 
+	return true;
+
 };
 
-const parseUsers = ({date, data}) => {
+const parseUsers = async ({date, data}) => {
+
+	// create ranking day
+	const rankDay = {
+		type: 'Users',
+		date: new Date(date),
+		ranking: []
+	};
 
 	const collection = [];
 
 	for (const item of data) {
 
-		// console.log(chalk.grey(`:: ${item.displayName}`));
+		console.log(chalk.grey(`:: ${item.displayName}`));
 
 		const user = {
-			name: item.displayName,
-			endpoint: item.userUrl,
-			joinedDate: item.joined,
-			tier: item.tier,
+			name: item.displayName.trim(),
+			endpoint: item.userUrl.trim(),
+			joinedDate: new Date(item.joined),
+			tier: item.tier.trim(),
 			points: item.points,
 			medals: {
 				gold: item.totalGoldMedals,
 				silver: item.totalSilverMedals,
 				bronze: item.totalBronzeMedals
 			},
-			rank: {
-				date: new Date(date),
-				rank: item.currentRanking
-			},
-			addAt: date
+			createdAt: new Date(date)
 		};
 
+		
 		collection.push(user);
+
+		const newUser = await addUser(user);
+
+		// console.log(newUser.name);
+
+		rankDay.ranking.push(new UserRanking({
+			position: item.currentRanking,
+			user: newUser._id,
+			name: newUser.name,
+			endpoint: newUser.endpoint
+		}));
+
 	}
+
+	await addDay(rankDay);
 
 	return collection;
 
 };
 
-const parseDatasets = ({date, data}) => {
+const parseDatasets = async ({date, data}) => {
+
+	// create ranking day
+	const rankDay = {
+		type: 'Datasets',
+		date: new Date(date),
+		ranking: []
+	};
 
 	const collection = [];
 	let rank = 1;
 
 	for (const item of data) {
 
-		// console.log(chalk.grey(`:: ${item.title}`));
+		console.log(chalk.grey(`:: ${item.title}`));
 
 		//-- files
 		let fileTypes = [];
@@ -171,16 +198,18 @@ const parseDatasets = ({date, data}) => {
 			tags.push(cat.name);
 		}
 
-		//crate obj
+		let usability = '';
+		if (item.usabilityRating) usability = item.usabilityRating.score;
 
 		const dataset = {
-			title: item.title,
-			endpoint: item.datasetUrl,
-			description: item.overview,
-			createdAt: item.dateUpdated,
-			owner: item.ownerName,
-			userEndpoint: item.ownerUrl,
-			license: item.licenseName,
+			title: item.title.trim(),
+			endpoint: item.datasetUrl.trim(),
+			description: item.overview.trim(),
+			uploadedAt: new Date(item.dateUpdated),
+			owner: item.ownerName.trim(),
+			ownerEndpoint: item.ownerUrl.trim(),
+			license: item.licenseName.trim(),
+			usability: usability,
 			size: item.datasetSize,
 			files: {
 				numFiles: numFiles,
@@ -188,30 +217,44 @@ const parseDatasets = ({date, data}) => {
 			},
 			tags: tags,
 			upvotes: item.totalVotes,
-			rank: {
-				date: new Date(),
-				rank: rank
-			},
-			addAt: date
+			createdAt: new Date(date)
 		};
 
 		rank += 1; 	//update ranking
 
-		collection.push(dataset);
+		const newDataset = await addDataset(dataset);
+
+		// console.log(newDataset.title);
+
+		rankDay.ranking.push(new DatasetRanking({
+			position: rank,
+			dataset: newDataset._id,
+			title: newDataset.title,
+			endpoint: newDataset.endpoint
+		}));
 	}
+
+	await addDay(rankDay);
 
 	return collection;
 
 };
 
-const parseCompetitions = ({date, data}) => {
+const parseCompetitions = async ({date, data}) => {
+
+	// create ranking day
+	const rankDay = {
+		type: 'Competitions',
+		date: new Date(date),
+		ranking: []
+	};
 
 	const collection = [];
 	let rank = 1;
 
 	for (const item of data) {
 
-		// console.log(chalk.grey(`:: ${item.competitionTitle}`));
+		console.log(chalk.grey(`:: ${item.competitionTitle}`));
 
 		//-- tags
 		let tags = [];
@@ -221,26 +264,33 @@ const parseCompetitions = ({date, data}) => {
 
 		//crate obj
 		const competition = {
-			title: item.competitionTitle,
-			endpoint: item.competitionUrl,
-			description: item.competitionDescription,
-			deadline: item.deadline,
-			type: item.hostSegmentTitle,
-			tags: tags,
-			prize: item.rewardDisplay,
-			teamsTotal: item.totalTeams,
+			title: item.competitionTitle.trim(),
+			endpoint: item.competitionUrl.trim(),
+			description: item.competitionDescription.trim(),
 			organization: item.organizationName,
-			rank: {
-				date: new Date(),
-				rank: rank
-			},
-			addAt: date
+			deadline: item.deadline.trim(),
+			type: item.hostSegmentTitle.trim(),
+			tags: tags,
+			prize: item.rewardDisplay.trim(),
+			teamsTotal: item.totalTeams,
+			createdAt: new Date(date)
 		};
 
 		rank += 1; 	//update ranking
 
-		collection.push(competition);
+		const newCompetition = await addCompetition(competition);
+
+		// console.log(newCompetition.title);
+
+		rankDay.ranking.push(new CompetitionRanking({
+			position: rank,
+			competition: newCompetition._id,
+			title: newCompetition.title,
+			endpoint: newCompetition.endpoint
+		}));
 	}
+
+	await addDay(rankDay);
 
 	return collection;
 
