@@ -1,14 +1,14 @@
 const sgMail = require('@sendgrid/mail');
 const {messagesLog,errorsLog} = require('../logs/datalog');
+const { DateTime } = require('luxon');
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const sendLogEmail = () => {
 
-	let date = new Date();
-	date = `${date.getDate()}/${date.getMonth()+1}/${date.getFullYear()}`;
+	let date = DateTime.local().toLocaleString(DateTime.DATE_MED);
 
-	const msg = composeMessage(date);
+	const msg = composeEmail(date);
 
 	sgMail.send({
 		to: process.env.EMAIL_TO,
@@ -18,32 +18,59 @@ const sendLogEmail = () => {
 	});
 };
 
-const composeMessage = (date) => {
-	const title = `Scraping Kaggle: ${date}`;
+const composeEmail = date => {
 
-	const msgs = getMessages('Log', messagesLog);
-	const error = getMessages('Errors', errorsLog);
+	const msgs = composeMessages(messagesLog);
+	const error = composeMessages(errorsLog);
 
-	return `
+	let html = `
+	<html>
 	<body>
-		<h2>${title}</h2>
-		<div>${msgs}</div>
-		<div>${error}</div>
-	</body>
+		<h1>Scraping Kaggle</h1>
+		<h3>${date}</h3>
+		<hr/>
 	`;
-};
 
-const getMessages = (type,messages) => {
-	let html = '';
-
-	if (messages.length > 0) {
-		html = `<h4>${type}</h4>`;
-		for (const msg of messages) {
-			html += `<p>${msg}</p>`;
-		}
+	if (msgs) {
+		html += `
+		<h2>Messages</h2>
+		<div>
+			${msgs}
+		</div>
+		`;
 	}
 
+	if (error) {
+		html += `
+		<hr/>
+		<h2>Errors</h2>
+		<div>
+			${error}
+		</div>
+		`;
+	}
+
+	html += `
+	<hr/>
+	</body>
+	</html>
+	`;
+
 	return html;
+};
+
+const composeMessages = msgs => {
+
+	if (msgs.length <= 0) return null;
+
+	let html = '';
+
+	for (const {title,message} of msgs) {
+		html += `<p><strong>${title}</strong>: ${message}</p>\n`;
+	}
+	
+	return html;
+
 };
 
 

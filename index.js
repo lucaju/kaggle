@@ -28,7 +28,7 @@ const run = async () => {
 	if (await mongoose.connect()) await scrape();
 
 	//send log email
-	sendEmail();
+	await sendEmail();
 
 	//done
 	console.log(chalk.blue('\nDone'));

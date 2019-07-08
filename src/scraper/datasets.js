@@ -39,7 +39,7 @@ const collectDatasets = async page => {
 
 	} catch(err) {
 		console.log(`Scraping: Datasets: Something is wrong with the scraping in Datasets: ${err}`);
-		logError(`Scraping: Datasets: Something is wrong with the scraping in Datasets: ${err}`);
+		logError('Scraping',`Datasets: Something is wrong with the scraping in Datasets: ${err}`);
 		return null;
 	}
 };
@@ -139,7 +139,7 @@ const getDetails = async (item, rank, page) => {
 
 	} catch (err) {
 		console.log(`Scraping: Dataset: Something is wrong with one of the datasets: ${err}`);
-		logError(`Scraping: Dataset: Something is wrong with one of the datasets: ${err}`);
+		logError('Scraping',`Dataset: Something is wrong with one of the datasets: ${err}`);
 		return null;
 	}
 

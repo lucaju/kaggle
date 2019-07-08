@@ -21,7 +21,7 @@ const collectCompetitions = async (page) => {
 		
 		if (items.length == 0) {
 			console.log(chalk.red('Scraping: Competition: List of items return 0'));
-			logError('Scraping: Competition: List of items return 0');
+			logError('Scraping','Competition: List of items return 0');
 			return null;
 		}
 		console.log(chalk.grey(`[${items.length}]`));
@@ -46,7 +46,7 @@ const collectCompetitions = async (page) => {
 
 	} catch(err) {
 		console.log(`Scraping: Competition: Something is wrong with the scraping in Competions: ${err}`);
-		logError(`Scraping: Competition: Something is wrong with the scraping in Competions: ${err}`);
+		logError('Scraping',`: Something is wrong with the scraping in Competions: ${err}`);
 		return null;
 	}
 };
@@ -98,7 +98,7 @@ const getDetails = async (item,rank) => {
 
 	} catch (err) {
 		console.log(`Scraping: Competion: Something is wrong with one of the competitions: ${err}`);
-		logError(`Scraping: Competion: Something is wrong with one of the competitions: ${err}`);
+		logError('Scraping',`Competion: Something is wrong with one of the competitions: ${err}`);
 		return null;
 	}
 };

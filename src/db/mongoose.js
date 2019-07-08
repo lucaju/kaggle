@@ -13,7 +13,7 @@ const connect = async () => {
 
 	} catch (err) {
 		console.log(chalk.red(err.name));
-		logError(err.name);
+		logError('Mongoose',err.name);
 	}
 };
 

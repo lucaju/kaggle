@@ -10,10 +10,10 @@ const addCompetitions = async collection => {
 	console.log(chalk.grey('\nSaving into database...'));
 
 	for (const data of collection) {
-		await addCompetition(data)
+		await addCompetition(data);
 	}
 
-	logMessage(`COMPETITIONS: ${itemsAdded} added. ${itemsUpdated} updated.`);
+	logMessage('Competittion', `${itemsAdded} added. ${itemsUpdated} updated.`);
 
 	console.log(
 		chalk.keyword('olive')(`${itemsAdded} competitions added.`),
@@ -48,7 +48,7 @@ const insertCompetition = async data => {
 		return await competition.save();
 	} catch (err) {
 		console.log(`MongoDB did not insert competition ${competition.title}: ${err}`);
-		logError(`MongoDB did not insert competition ${competition.title}: ${err}`);
+		logError('MongoDB',`MongoDB did not insert competition ${competition.title}: ${err}`);
 	}
 };
 
@@ -66,7 +66,7 @@ const updateCompetition = async (competition, data) => {
 		return await competition.save();
 	} catch (err) {
 		console.log(`MongoDB did not update competition ${competition.title}: ${err}`);
-		logError(`MongoDB did not update competition ${competition.title}: ${err}`);
+		logError('MongoDB',`MongoDB did not update competition ${competition.title}: ${err}`);
 	}
 };
 

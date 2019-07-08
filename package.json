@@ -1,6 +1,6 @@
 {
 	"name": "scraper-kaggle",
-	"version": "0.2.1",
+	"version": "0.2.2",
 	"description": "Scraper for Kaggle",
 	"main": "index.js",
 	"scripts": {
@@ -26,12 +26,12 @@
 		"@sendgrid/mail": "^6.4.0",
 		"chalk": "^2.4.2",
 		"dotenv": "^8.0.0",
-		"mongoose": "^5.6.3",
+		"env-cmd": "^9.0.3",
+		"luxon": "^1.16.1",
+		"mongoose": "^5.6.4",
 		"puppeteer": "^1.18.1"
 	},
 	"devDependencies": {
-		"env-cmd": "^9.0.3",
-		"eslint": "^6.0.1",
-		"luxon": "^1.16.1"
+		"eslint": "^6.0.1"
 	}
 }

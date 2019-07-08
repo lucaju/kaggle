@@ -37,8 +37,8 @@ const addRanking = async (type, collection) => {
 	//logs
 	const log = getLog(type);
 
-	logMessage(`${type}: ${log.itemsAdded} added. ${log.itemsUpdated} updated.`);
-	logMessage(`${type} RAKNING: ${rankingData.ranking.length} ${type}.`);
+	logMessage(`${type}`,`${log.itemsAdded} added. ${log.itemsUpdated} updated.`);
+	logMessage('Ranking',`${rankingData.ranking.length} ${type}.`);
 
 	console.log(
 		chalk.keyword('olive')(`${log.itemsAdded} ${type} added.`),

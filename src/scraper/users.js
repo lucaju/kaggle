@@ -31,7 +31,7 @@ const collectUsers = async page => {
 
 	} catch(err) {
 		console.log(`Scraping: Users: Something is wrong with the scraping in Users: ${err}`);
-		logError(`Scraping: Users: Something is wrong with the scraping in Users: ${err}`);
+		logError('Scraping',`Users: Something is wrong with the scraping in Users: ${err}`);
 		return null;
 	}
 };
@@ -83,7 +83,7 @@ const getDetails = async item => {
 
 	} catch (err) {
 		console.log(`Scraping: User: Something is wrong with one of the users: ${err}`);
-		logError(`Scraping: User: Something is wrong with one of the users: ${err}`);
+		logError('Scraping',`User: Something is wrong with one of the users: ${err}`);
 		return null;
 	}
 };
