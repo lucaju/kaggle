@@ -106,9 +106,16 @@ const getDetails = async (item, rank, page) => {
 		await page.waitFor('div .mdc-dialog__surface');
 
 		//modal
-		const description = await page.$eval('div .mdc-dialog__surface > div .sc-fQkuQJ  p', content => content.innerText);
+		const modal = await page.$('div .mdc-dialog__surface');
 
-		const modalMeta = await page.$('div .mdc-dialog__surface > div .sc-cCVOAp');
+		// const description = await modal.$('div:nth-of-type(1) > div:nth-of-type(3)', content => content.innerHTML);
+		// console.log(description);
+		
+		// await page.waitFor('.sc-lnmtFM');
+		// const descriptionText = await description.$eval('p', content => content.innerHTML);
+		// console.log(descriptionText);
+
+		const modalMeta = await page.$('div .mdc-dialog__surface > div .sc-gGCbJM');
 		
 		let uploadedAt = await modalMeta.$eval('span:nth-of-type(1)', content => content.innerText);
 		uploadedAt = uploadedAt.split('\n')[1];
@@ -124,7 +131,7 @@ const getDetails = async (item, rank, page) => {
 		return {
 			title,
 			endpoint,
-			description,
+			// description,
 			uploadedAt,
 			owner,
 			ownerEndpoint,

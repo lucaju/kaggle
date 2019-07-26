@@ -5,6 +5,8 @@ const {logMessage, logError} = require('../logs/datalog');
 let itemsAdded = 0;
 let itemsUpdated = 0;
 
+const log = [];
+
 const addCompetitions = async collection => {
 
 	console.log(chalk.grey('\nSaving into database...'));
@@ -32,9 +34,11 @@ const addCompetition = async data => {
 	if (!competition) {
 		competition = await insertCompetition(data);
 		if (competition) itemsAdded++;
+		if (competition) log.push({tile:competition.title, status: 'added'});
 	} else {
 		competition = await updateCompetition(competition, data);
 		if (competition) itemsUpdated++;
+		if (competition) log.push({tile:competition.title, status: 'updated'});
 	}
 
 	return competition;
@@ -71,10 +75,12 @@ const updateCompetition = async (competition, data) => {
 };
 
 const getLogCompetitions = () => {
-	return {
-		itemsAdded,
-		itemsUpdated
-	};
+	// return {
+	// 	itemsAdded,
+	// 	itemsUpdated
+	// };
+
+	return log;
 };
 
 module.exports = {

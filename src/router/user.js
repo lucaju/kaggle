@@ -5,6 +5,8 @@ const {logMessage, logError} = require('../logs/datalog');
 let itemsAdded = 0;
 let itemsUpdated = 0;
 
+const log = [];
+
 const addUsers = async collection => {
 
 	console.log(chalk.grey('\nSaving into database...'));
@@ -33,9 +35,11 @@ const addUser = async data => {
 	if (!user) {
 		user = await inserUser(data);
 		if (user) itemsAdded++;
+		if (user) log.push({tile:user.name, status: 'added'});
 	} else {
 		user = await updateUser(user, data);
 		if (user) itemsUpdated++;
+		if (user) log.push({tile:user.name, status: 'updated'});
 	}
 
 	return user;
@@ -70,10 +74,12 @@ const updateUser = async (user, data) => {
 };
 
 const getLogUsers = () => {
-	return {
-		itemsAdded,
-		itemsUpdated
-	};
+	// return {
+	// 	itemsAdded,
+	// 	itemsUpdated
+	// };
+
+	return log;
 };
 
 

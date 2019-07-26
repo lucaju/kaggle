@@ -36,13 +36,15 @@ const addRanking = async (type, collection) => {
 
 	//logs
 	const log = getLog(type);
+	const itemsAdded = log.filter( item => item.status == 'added');
+	const itemsUpdated = log.filter( item => item.status == 'updated');
 
-	logMessage(`${type}`,`${log.itemsAdded} added. ${log.itemsUpdated} updated.`);
+	logMessage(`${type}`,log);
 	logMessage('Ranking',`${rankingData.ranking.length} ${type}.`);
 
 	console.log(
-		chalk.keyword('olive')(`${log.itemsAdded} ${type} added.`),
-		chalk.keyword('orange')(`${log.itemsUpdated} ${type} updated.`),
+		chalk.keyword('olive')(`${itemsAdded.length} ${type} added.`),
+		chalk.keyword('orange')(`${itemsUpdated.length} ${type} updated.`),
 		chalk.keyword('khaki')(`${rankingData.ranking.length} ${type} ranked.\n`)
 	);
 
