@@ -5,6 +5,8 @@ const {logMessage, logError} = require('../logs/datalog');
 let itemsAdded = 0;
 let itemsUpdated = 0;
 
+const log = [];
+
 const addDatasets = async collection => {
 
 	console.log(chalk.grey('\nSaving into database...'));
@@ -33,9 +35,11 @@ const addDataset = async data => {
 	if (!dataset) {
 		dataset = await insertDataset(data);
 		if (dataset) itemsAdded++;
+		if (dataset) log.push({tile:dataset.title, status: 'added'});
 	} else {
 		dataset = await updateDataset(dataset, data);
 		if (dataset) itemsUpdated++;
+		if (dataset) log.push({tile:dataset.title, status: 'updated'});
 	}
 
 	return dataset;
@@ -75,10 +79,12 @@ const updateDataset = async (datatset, data) => {
 };
 
 const getLogDatasets = () => {
-	return {
-		itemsAdded,
-		itemsUpdated
-	};
+	// return {
+	// 	itemsAdded,
+	// 	itemsUpdated
+	// };
+
+	return log;
 };
 
 module.exports = {
