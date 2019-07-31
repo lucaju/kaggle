@@ -90,7 +90,7 @@ const getDetails = async (item, rank, page) => {
 		let upvotes = await item.$eval('div > div > div:last-child > span:nth-child(5)', content => content.innerText);
 		upvotes = upvotes.split(' ');
 		upvotes = upvotes[0];
-		upvotes = parseFloat(upvotes);
+		upvotes = parseFloat(upvotes); // int????
 
 
 		//------2. details
@@ -106,7 +106,7 @@ const getDetails = async (item, rank, page) => {
 		await page.waitFor('div .mdc-dialog__surface');
 
 		//modal
-		const modal = await page.$('div .mdc-dialog__surface');
+		// const modal = await page.$('div .mdc-dialog__surface');
 
 		// const description = await modal.$('div:nth-of-type(1) > div:nth-of-type(3)', content => content.innerHTML);
 		// console.log(description);
@@ -115,7 +115,7 @@ const getDetails = async (item, rank, page) => {
 		// const descriptionText = await description.$eval('p', content => content.innerHTML);
 		// console.log(descriptionText);
 
-		const modalMeta = await page.$('div .mdc-dialog__surface > div .sc-gGCbJM');
+		const modalMeta = await page.$('div .mdc-dialog__surface > div .sc-jkCMRl');
 		
 		let uploadedAt = await modalMeta.$eval('span:nth-of-type(1)', content => content.innerText);
 		uploadedAt = uploadedAt.split('\n')[1];
