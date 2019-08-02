@@ -115,7 +115,7 @@ const getDetails = async (item, rank, page) => {
 		// const descriptionText = await description.$eval('p', content => content.innerHTML);
 		// console.log(descriptionText);
 
-		const modalMeta = await page.$('div .mdc-dialog__surface > div .sc-jkCMRl');
+		const modalMeta = await page.$('div .mdc-dialog__surface > div:first-child > div:nth-of-type(2) > div:first-child');
 		
 		let uploadedAt = await modalMeta.$eval('span:nth-of-type(1)', content => content.innerText);
 		uploadedAt = uploadedAt.split('\n')[1];
