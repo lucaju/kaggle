@@ -1,37 +1,41 @@
 {
-	"name": "scraper-kaggle",
-	"version": "0.2.4",
-	"description": "Scraper for Kaggle",
-	"main": "index.js",
-	"scripts": {
-		"start": "env-cmd node index",
-		"dev-import": "env-cmd node src/util/import",
-		"dev-import-old": "env-cmd node src/util/importOldResults"
-	},
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/lucaju/kaggle"
-	},
-	"author": {
-		"name": "Luciano Frizzera",
-		"email": "lucaju@gmail.com",
-		"url": "http://luciano.fluxo.art.br"
-	},
-	"license": "CC-BY-SA-4.0",
-	"keywords": [
-		"Kaggle",
-		"Scraper"
-	],
-	"dependencies": {
-		"@sendgrid/mail": "^6.4.0",
-		"chalk": "^2.4.2",
-		"dotenv": "^8.1.0",
-		"env-cmd": "^10.0.1",
-		"luxon": "^1.17.2",
-		"mongoose": "^5.7.0",
-		"puppeteer": "^1.19.0"
-	},
-	"devDependencies": {
-		"eslint": "^6.3.0"
-	}
+  "name": "scraper-kaggle",
+  "version": "0.2.4",
+  "description": "Scraper for Kaggle",
+  "main": "index.js",
+  "scripts": {
+    "start": "env-cmd node index",
+    "dev-import": "env-cmd node src/util/import",
+    "dev-import-old": "env-cmd node src/util/importOldResults",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lucaju/kaggle"
+  },
+  "author": {
+    "name": "Luciano Frizzera",
+    "email": "lucaju@gmail.com",
+    "url": "http://luciano.fluxo.art.br"
+  },
+  "license": "CC-BY-SA-4.0",
+  "keywords": [
+    "Kaggle",
+    "Scraper"
+  ],
+  "dependencies": {
+    "@sendgrid/mail": "^6.4.0",
+    "chalk": "^2.4.2",
+    "dotenv": "^8.1.0",
+    "env-cmd": "^10.0.1",
+    "luxon": "^1.17.2",
+    "mongoose": "^5.7.0",
+    "puppeteer": "^1.19.0",
+    "snyk": "^1.230.5"
+  },
+  "devDependencies": {
+    "eslint": "^6.3.0"
+  },
+  "snyk": true
 }
