@@ -22,47 +22,47 @@ const sendLogEmail = () => {
 
 const getData = () => {
 
+	const result = {};
+
 	const datasets = messagesLog.find( msg => msg.title == 'datasets');
-	const datasetsAdded = datasets.message.filter( item => item.status == 'added');
-	const datasetsUpdated = datasets.message.filter( item => item.status == 'updated');
+	if (datasets) {
+		const datasetsAdded = datasets.message.filter( item => item.status == 'added');
+		const datasetsUpdated = datasets.message.filter( item => item.status == 'updated');
+
+		result.db = {
+			up: datasetsUpdated.length,
+			add: datasetsAdded.length,
+			showAdded: (datasetsAdded.length > 0) ? 'block' : 'none'
+		};
+	}
+	
 
 	const competitions = messagesLog.find( msg => msg.title == 'competitions');
-	const competitionsAdded = competitions.message.filter( item => item.status == 'added');
-	const competitionsUpdated = competitions.message.filter( item => item.status == 'updated');
+	if (competitions) {
+		const competitionsAdded = competitions.message.filter( item => item.status == 'added');
+		const competitionsUpdated = competitions.message.filter( item => item.status == 'updated');
+
+		result.cmp = {
+			up: competitionsUpdated.length,
+			add: competitionsAdded.length,
+			showAdded: (competitionsAdded.length > 0) ? 'block' : 'none'
+		};
+	}
+	
 
 	const users = messagesLog.find( msg => msg.title == 'users');
-	const usersAdded = users.message.filter( item => item.status == 'added');
-	const usersUpdated = users.message.filter( item => item.status == 'updated');
+	if (users) {
+		const usersAdded = users.message.filter( item => item.status == 'added');
+		const usersUpdated = users.message.filter( item => item.status == 'updated');
 
-	const db = {
-		up: datasetsUpdated.length,
-		add: datasetsAdded.length,
-		showAdded: (datasetsAdded.length > 0) ? 'block' : 'none'
-	};
+		result.usr = {
+			up: usersUpdated.length,
+			add: usersAdded.length,
+			showAdded: (usersAdded.length > 0) ? 'block' : 'none'
+		};
+	}
 
-	const cmp = {
-		up: competitionsUpdated.length,
-		add: competitionsAdded.length,
-		showAdded: (competitionsAdded.length > 0) ? 'block' : 'none'
-	};
-
-	const usr = {
-		up: usersUpdated.length,
-		add: usersAdded.length,
-		showAdded: (usersAdded.length > 0) ? 'block' : 'none'
-	};
-
-	const err = {
-		erros: JSON.stringify(errorsLog),
-		showErrors: (errorsLog.length > 0) ? 'block' : 'none'
-	};
-
-	return {
-		db,
-		cmp,
-		usr,
-		err,
-	} ;
+	return result ;
 
 };
 
