@@ -1,37 +1,45 @@
 {
 	"name": "scraper-kaggle",
-	"version": "0.2.5",
+	"version": "1.0.0",
 	"description": "Scraper for Kaggle",
-	"main": "index.js",
-	"scripts": {
-		"start": "env-cmd node src/index",
-		"dev-import": "env-cmd node src/util/import",
-		"dev-import-old": "env-cmd node src/util/importOldResults"
-	},
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/lucaju/kaggle"
-	},
+	"keywords": [
+		"Kaggle",
+		"Scraper"
+	],
 	"author": {
 		"name": "Luciano Frizzera",
 		"email": "lucaju@gmail.com",
 		"url": "http://luciano.fluxo.art.br"
 	},
-	"license": "CC-BY-SA-4.0",
-	"keywords": [
-		"Kaggle",
-		"Scraper"
-	],
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/lucaju/kaggle"
+	},
+	"type": "module",
+	"main": "index.js",
+	"scripts": {
+		"start": "env-cmd -e production node src/index.mjs",
+		"dev-import": "env-cmd node src/util/import",
+		"dev-import-old": "env-cmd node src/util/importOldResults",
+		"cm": "git-cz"
+	},
 	"dependencies": {
-		"@sendgrid/mail": "^6.4.0",
-		"chalk": "^3.0.0",
-		"dotenv": "^8.2.0",
+		"@sendgrid/mail": "^7.3.0",
+		"chalk": "^4.1.0",
 		"env-cmd": "^10.0.1",
 		"luxon": "^1.21.3",
 		"mongoose": "^5.7.13",
-		"puppeteer": "^2.0.0"
+		"puppeteer": "^5.3.1"
 	},
 	"devDependencies": {
-		"eslint": "^6.7.2"
+		"commitizen": "^4.2.1",
+		"eslint": "^7.11.0",
+		"git-cz": "^4.7.1"
+	},
+	"config": {
+		"commitizen": {
+			"path": "git-cz"
+		}
 	}
 }
