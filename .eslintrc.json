@@ -6,31 +6,16 @@
     "extends": "eslint:recommended",
     "parserOptions": {
         "sourceType": "module",
-        "ecmaVersion": 2018
+        "ecmaVersion": 2020
     },
     "rules": {
-        "indent": [
-            "error",
-            "tab"
-        ],
-        "linebreak-style": [
-            "error",
-            "unix"
-        ],
-        "quotes": [
-            "error",
-            "single"
-        ],
-        "semi": [
-            "error",
-            "always"
-        ],
-        "no-console": [
-            "error",
-            { "allow": ["log","error"] }
-        ],
-        "require-await": [
-            "error"
-        ]
+        "indent": ["error", "tab"],
+        "linebreak-style": ["error", "unix"],
+		"quotes": [2, "single"],
+		"no-multi-spaces": 0,
+		"no-trailing-spaces": 0,
+		"no-unused-vars": 2,
+		"semi": ["error", "always"],
+		"require-await": ["error"]
     }
 }

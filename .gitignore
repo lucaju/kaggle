@@ -3,9 +3,9 @@
 /design
 
 # files
-package-lock.json
 .DS_Store
 *.sh
+.env-cmdrc
 
 # Logs
 
