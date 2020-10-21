@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const competitionSchema = mongoose.Schema({
 	title: {
@@ -6,48 +6,52 @@ const competitionSchema = mongoose.Schema({
 		required: true,
 		trim: true
 	},
-	endpoint: {
+	uri: {
 		type: String,
 		required: true,
 		trim: true
 	},
-	description: {
+	shortDescription: {
 		type: String,
 		trim: true
 	},
-	organization: {
+	// organization: {
+	// 	type: String,
+	// 	trim: true
+	// },
+	relativeDeadline: {
 		type: String,
 		trim: true
 	},
-	deadline: {
+	category: {
 		type: String,
 		trim: true
 	},
-	type: {
-		type: String,
-		trim: true
-	},
-	tags: {
+	subCategory: {
 		type: Array,
 		default: []
+	},
+	teams: {
+		type: Number,
+		trim: true
 	},
 	prize: {
 		type: String,
 		trim: true
 	},
-	teamsTotal: {
-		type: String,
-		trim: true
+	active: {
+		type: Boolean,
 	},
 }, {
-	timestamps: true
+	timestamps: true,
+	strict: false
 });
 
-competitionSchema.virtual('ranking', {
-	ref: 'CompetitionRanking',
-	localField: '_id',
-	foreignField: 'competition'
-});
+// competitionSchema.virtual('ranking', {
+// 	ref: 'CompetitionRanking',
+// 	localField: '_id',
+// 	foreignField: 'competition'
+// });
 
 competitionSchema.methods.toJSON = function () {
 	const competition = this;
@@ -57,6 +61,6 @@ competitionSchema.methods.toJSON = function () {
 
 const Competition = mongoose.model('Competition', competitionSchema);
 
-module.exports = Competition;
+export default Competition;
 
 
