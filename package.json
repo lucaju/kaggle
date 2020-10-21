@@ -30,10 +30,11 @@
 		"env-cmd": "^10.0.1",
 		"luxon": "^1.21.3",
 		"mongoose": "^5.7.13",
+		"node-emoji": "^1.10.0",
 		"puppeteer": "^5.3.1"
 	},
 	"devDependencies": {
-		"commitizen": "^4.2.1",
+		"commitizen": "^4.2.2",
 		"eslint": "^7.11.0",
 		"git-cz": "^4.7.1"
 	},
