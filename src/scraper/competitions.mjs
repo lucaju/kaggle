@@ -11,9 +11,7 @@ export const collectCompetitions = async (browserPage) => {
 	//start
 	page = browserPage;
 
-	let collection = [];
-
-	console.log(chalk.green.bold('\nCompetitions'));
+	console.log(chalk.green.bold('\nCOMPETITIONS'));
 
 	const tabs = ['active', 'completed', 'in-class'];
 
@@ -28,11 +26,8 @@ export const collectCompetitions = async (browserPage) => {
 			const competition = await getDetails(item, tab);
 			if (!competition) continue;
 			await save(competition);
-			collection = [...collection, competition];
 		}
 	}
-
-	return collection;
 };
 
 const getList = async (tab) => {
@@ -94,15 +89,15 @@ const scroll = async (container) => {
 
 	let list = await container.$$('li:nth-child(odd)');
 
-	let prevListLengh = 0;
+	let prevListLength = 0;
 	const dot = '.';
 	let scrollN = 1;
 
-	while (list.length > prevListLengh) {
+	while (list.length > prevListLength) {
 		console.log(chalk.yellow(dot.repeat(scrollN)));
 		scrollN += 1;
 
-		prevListLengh = list.length;
+		prevListLength = list.length;
 
 		await page.mouse.wheel({ deltaY: height });
 		await page.waitForTimeout(2000);
