@@ -19,8 +19,8 @@ export const saveDataset = async (data) => {
 	};
 };
 
-const findDatasetByUri = async (title) => {
-	return await Dataset.findOne({ title });
+const findDatasetByUri = async (uri) => {
+	return await Dataset.findOne({ uri });
 };
 
 const insert = async (data) => {
@@ -42,6 +42,7 @@ const update = async (datatset, data) => {
 	if (data?.usabilityScore !== 0) datatset.usabilityScore = data.usabilityScore;
 	if (data?.files) datatset.files = data.files;
 	if (data?.upvotes !== 0) datatset.upvotes = data.upvotes;
+	if (data?.tasks !== 0) datatset.tasks = data.tasks;
 
 	return await datatset.save().catch((error) => {
 		const msg = {
