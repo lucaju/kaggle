@@ -2,205 +2,126 @@ import chalk from 'chalk';
 import emoji from 'node-emoji';
 import { logError } from '../logs/datalog.mjs';
 import { saveCompetition } from '../router/competition.mjs';
-
+import { clearStdout } from './scraper.mjs';
 
 const url = 'https://www.kaggle.com/competitions';
+let page;
 
-export const collectCompetitions = async (page) => {
-
+export const collectCompetitions = async (browserPage) => {
 	//start
+	page = browserPage;
+
 	let collection = [];
 
-	console.log('\n');
-	console.log(chalk.green.bold('Competitions'));
+	console.log(chalk.green.bold('\nCompetitions'));
 
-	// navigate to URL and waait content to load
-	await page.goto(url);
-	await page.waitForSelector('#site-content');
+	const tabs = ['active', 'completed', 'in-class'];
 
-	// Colletct active competitions
-	const listActiveCompetitions = await getListActiveCommpetitions(page);
-	const activeCompetitions = await getCompetitions(listActiveCompetitions);
-	collection = [ ...collection, activeCompetitions];
+	for await (const tab of tabs) {
+		// navigate to URL (refresh each time) and wait content to load
+		await page.goto(url);
+		await page.waitForSelector('#site-content');
 
-	// Colletct completed competitions
-	const listCompletedCompetitions = await getListCompletedCommpetitions(page);
-	const completedCompetitions = await getCompetitions(listCompletedCompetitions);
-	collection = [ ...collection, completedCompetitions];
+		const list = await getList(tab);
+
+		for await (const item of list) {
+			const competition = await getDetails(item, tab);
+			if (!competition) continue;
+			await save(competition);
+			collection = [...collection, competition];
+		}
+	}
 
 	return collection;
-
 };
 
-const getListActiveCommpetitions = async (page) => {
-	console.log('\n');
-	console.log(chalk.green.bold(`Collecting Active Competitions ${emoji.get('trophy')}`));
+const getList = async (tab) => {
+	console.log(chalk.green.bold(`\n${emoji.get('trophy')} Collecting ${tab} Competitions`));
 
 	try {
-
-		//get Active Competitions of items
-		const list = await page.$$(
-			'#site-content > div:nth-child(2) > div > div:nth-child(3) > div:nth-child(3) > ul > li:nth-child(odd)'
-		);
-
-		if (list.length === 0) {
-			const msg = {
-				title: 'Scraping',
-				message: 'Active Competition: List of items return 0',
-			};
-			console.log(msg);
-			logError(msg);
-			return [];
+		//Cange Tab
+		if (tab !== 'active') {
+			const nav = await page.$(
+				'#site-content > div:nth-child(2) > div > div:nth-child(3) > nav'
+			);
+			await changeTab(nav, tab);
 		}
 
-		console.log(chalk.grey(`[${list.length}]`));
-
-		return list;
-
-	} catch (error) {
-		const msg = {
-			title: 'Scraping',
-			message: `Something is wrong with the scraping in Competions: ${error}`,
-		};
-		console.log(msg);
-		logError(msg);
-		return null;
-	}
-};
-
-const getListCompletedCommpetitions = async (page) => {
-	// let collection s= [];
-
-	console.log('\n');
-	console.log(chalk.green.bold('Collecting Completed Competitions'));
-
-
-	try {
-
-		// Click on "completed" Button to show list of completed competitions
-		console.log(chalk.yellow('Click to switch to "completed competitions"'));
-		const completedTabButton = await page.$('#site-content > div:nth-child(2) > div > div:nth-child(3) > nav > div:first-child > button:nth-child(2)');
-		const buttonBoundingBox = await completedTabButton.boundingBox();	
-		await page.mouse.click(
-			buttonBoundingBox.x + buttonBoundingBox.width / 2,
-			buttonBoundingBox.y + buttonBoundingBox.height / 2
-		);
-		await page.waitForTimeout(1 * 1000);
-
-
 		//SCROLL TO LOAD DATA
-		console.log(chalk.yellow('Scrolling to Load...'));
-
 		const container = await page.$(
 			'#site-content > div:nth-child(2) > div > div:nth-child(3) > div:nth-child(3) > ul'
 		);
-		const containerBoundingBox = await container.boundingBox();	
-		const height = containerBoundingBox.height;
-
-		let list = await container.$$(
-			'li:nth-child(odd)'
-		);
-
-		let prevListLengh = 0;
-
-		let i = 1;
-		const dot = '.';
-
-		console.log(chalk.yellow('.'));
-
-		// console.log(list.length);
-		// console.log(containerBoundingBox);
-
-		while (list.length > prevListLengh) {
-			i += 1;
-			console.log(chalk.yellow(dot.repeat(i)));
-
-			prevListLengh = list.length;
-
-			await page.mouse.wheel({ deltaY: height });
-			await page.waitForTimeout(2000);
-
-			list = await container.$$(
-				'li:nth-child(odd)'
-			);
-
-			// console.log(list.length,prevListLengh);
-			// await page.waitForTimeout(1000);
-
-		}
-
-
-		await page.waitForTimeout(1000);
-
+		const list = scroll(container);
 
 		if (list.length === 0) {
-			const msg = {
-				title: 'Scraping',
-				message: 'Completed Competition: List of items return 0',
-			};
-			console.log(msg);
-			logError(msg);
+			processError('Completed Competition: List of items return 0');
 			return [];
 		}
 
-		console.log(chalk.grey(`[${list.length}]`));
-
-		//loop through items
-		// for await (const item of list) {
-		// 	const competition = await getDetails(item, false);
-		// 	if (competition) collection.push(competition);
-		// }
-
 		return list;
-
 	} catch (error) {
-		const msg = {
-			title: 'Scraping',
-			message: `Something is wrong with the scraping in Competions: ${error}`,
-		};
-		console.log(msg);
-		logError(msg);
+		processError(error);
 		return null;
 	}
 };
 
-const getCompetitions = async (list) => {
-	//loop through items
-	for await (const item of list) {
-		const competition = await getDetails(item, false);
-		let logMsg = '';
+const changeTab = async (nav, tab) => {
+	// Click on "completed" Button to show list of completed competitions
+	console.log(chalk.yellow(`- Click to switch to "${tab}" competitions`));
 
-		if (competition) {
+	let tabChild = '';
+	if (tab === 'completed') tabChild = '2';
+	if (tab === 'in-class') tabChild = '3';
 
-			const data = await saveCompetition(competition);
-			
-			if (data.error) {
-				logMsg = data.error;
-				return;
-			}
+	if (tabChild === '') return;
 
-			const updatedEmoji = (data.status === 'updated') ? emoji.get('recycle') : '';
-			logMsg = `${emoji.get('sunny')} ${updatedEmoji} :: ${competition.title}\r`;
+	const tabToClick = await nav.$(`div:first-child > button:nth-child(${tabChild})`);
+	const boundingBox = await tabToClick.boundingBox();
+	await page.mouse.click(
+		boundingBox.x + boundingBox.width / 2,
+		boundingBox.y + boundingBox.height / 2
+	);
+	await page.waitForTimeout(1 * 1000);
 
-		} else {
-			logMsg = `${emoji.get('kull_and_crossbones')} :: ${competition.title}\r`;
-		}
-
-		process.stdout.clearLine();
-		process.stdout.cursorTo(0);
-		process.stdout.write(logMsg);
-		process.stdout.write('\n');
-	}
+	return nav;
 };
 
-const getDetails = async (item, active) => {
+const scroll = async (container) => {
+	console.log(chalk.yellow('- Scrolling to Load...'));
+
+	const boundingBox = await container.boundingBox();
+	const height = boundingBox.height;
+
+	let list = await container.$$('li:nth-child(odd)');
+
+	let prevListLengh = 0;
+	const dot = '.';
+	let scrollN = 1;
+
+	while (list.length > prevListLengh) {
+		console.log(chalk.yellow(dot.repeat(scrollN)));
+		scrollN += 1;
+
+		prevListLengh = list.length;
+
+		await page.mouse.wheel({ deltaY: height });
+		await page.waitForTimeout(2000);
+
+		list = await container.$$('li:nth-child(odd)');
+	}
+
+	console.log(chalk.grey(`[${list.length}]`));
+
+	await page.waitForTimeout(500);
+	return list;
+};
+
+const getDetails = async (item, tab) => {
 	try {
 		const title = await item.$eval(
 			'a > span:nth-child(2) > div:first-child',
 			(content) => content.innerText
 		);
-
-		process.stdout.write(`:: ${title}`);
 
 		const endpoint = await item.$eval('a', (content) => content.getAttribute('href'));
 		const shortDescription = await item.$eval(
@@ -234,7 +155,7 @@ const getDetails = async (item, active) => {
 
 		const prize = await item.$eval('div:nth-child(2)', (content) => content.innerText);
 
-		return {
+		const competition = {
 			title,
 			uri: `https://www.kaggle.com${endpoint}`,
 			shortDescription,
@@ -243,17 +164,43 @@ const getDetails = async (item, active) => {
 			subCategory: metadata.subCategory,
 			teams: metadata.teams,
 			prize,
-			active
 		};
+
+		competition.active = tab === 'active' ? true : false;
+		competition.inClass = tab === 'in-class' ? true : false;
+
+		return competition;
 	} catch (error) {
-		const msg = {
-			title: 'Scraping',
-			message: `Competion: Something is wrong with one of the competitions: ${error}`,
-		};
-		console.log(msg);
-		logError(msg);
+		processError(error);
 		return null;
 	}
+};
+
+const save = async (competition) => {
+	let logMsg = '';
+	const data = await saveCompetition(competition);
+
+	if (data.error) {
+		logMsg = data.error;
+		return;
+	}
+
+	const updatedEmoji = data.status === 'updated' ? emoji.get('recycle') : '';
+	logMsg = `${emoji.get('sunny')} ${updatedEmoji} :: ${competition.title}\r\n`;
+
+	clearStdout();
+	process.stdout.write(logMsg);
+
+	return competition;
+};
+
+const processError = (error) => {
+	const msg = {
+		title: 'Scraping Competion',
+		message: error,
+	};
+	console.log(msg);
+	logError(msg);
 };
 
 export default {
