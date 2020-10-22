@@ -13,6 +13,12 @@ export const scraper = async (target, page) => {
 	}
 };
 
+export const clearStdout = () => {
+	process.stdout.clearLine();
+	process.stdout.cursorTo(0);
+};
+
 export default {
 	scraper,
+	clearStdout
 };
