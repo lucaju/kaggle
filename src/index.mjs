@@ -5,11 +5,9 @@ import mongoose from './db/mongoose.mjs';
 import { sendLogEmail } from './emails/sendEmail.mjs';
 import { scraper } from './scraper/scraper.mjs';
 
-// import { addRanking } from './router/ranking';
-
 const targets = [
-	'competitions',
-	// 'datasets',
+	// 'competitions',
+	'datasets',
 	// 'users'
 ];
 
@@ -44,9 +42,7 @@ const scrape = async () => {
 
 	//loop through the pages to scrape
 	for await (const target of targets) {
-		const collection = await scraper(target, page);
-		// console.log(collection);
-		// if (collection) await addRanking(target,collection);
+		await scraper(target, page);
 	}
 
 	// close pupeteer and mongoose
