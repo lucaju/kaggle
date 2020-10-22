@@ -7,10 +7,10 @@ export const saveCompetition = async (data) => {
 
 	if (!competition) {
 		status = 'inserted';
-		competition = await insertCompetition(data);
+		competition = await insert(data);
 	} else {
 		status = 'updated';
-		competition = await updateCompetition(competition, data);
+		competition = await update(competition, data);
 	}
 
 	return {
@@ -23,7 +23,7 @@ const findByUri = async (uri) => {
 	return await Competition.findOne({ uri });
 };
 
-const insertCompetition = async (data) => {
+const insert = async (data) => {
 	const competition = new Competition(data);
 	return await competition.save()
 		.catch((error) => {
@@ -36,13 +36,13 @@ const insertCompetition = async (data) => {
 		});
 };
 
-const updateCompetition = async (competition, data) => {
-	if (data?.shortDescription !== '') competition.description = data.description;
-	if (data?.deadline !== '') competition.deadline = data.deadline;
+const update = async (competition, data) => {
+	if (data?.shortDescription !== '') competition.shortDescription = data.shortDescription;
+	if (data?.relativeDeadline !== '') competition.relativeDeadline = data.relativeDeadline;
 	if (data?.category !== '') competition.category = data.category;
 	if (data?.subCategory !== '') competition.subCategory = data.subCategory;
 	if (data?.prize !== '') competition.prize = data.prize;
-	if (data?.teams !== '') competition.teams = data.teams;
+	if (data?.teams !== 0) competition.teams = data.teams;
 
 	return await competition.save()
 		.catch((error) => {

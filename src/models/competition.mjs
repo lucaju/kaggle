@@ -12,33 +12,13 @@ const competitionSchema = mongoose.Schema(
 			required: true,
 			trim: true,
 		},
-		shortDescription: {
-			type: String,
-			trim: true,
-		},
-		relativeDeadline: {
-			type: String,
-			trim: true,
-		},
-		category: {
-			type: String,
-			trim: true,
-		},
-		subCategory: {
-			type: Array,
-			default: [],
-		},
-		teams: {
-			type: Number,
-			trim: true,
-		},
-		prize: {
-			type: String,
-			trim: true,
-		},
-		active: {
-			type: Boolean,
-		},
+		shortDescription: { type: String, trim: true },
+		relativeDeadline: { type: String, trim: true },
+		category: { type: String, trim: true },
+		subCategory: { type: String, trim: true },
+		teams: { type: Number, trim: true },
+		prize: { type: String, trim: true },
+		active: { type: Boolean },
 	},
 	{
 		timestamps: true,
