@@ -1,66 +1,37 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
-const datasetSchema = mongoose.Schema({
-	title: {
-		type: String,
-		required: true,
-		trim: true
-	},
-	endpoint: {
-		type: String,
-		required: true,
-		trim: true
-	},
-	description: {
-		type: String,
-		trim: true
-	},
-	uploadedAt: {
-		type: Date
-	},
-	owner: {
-		type: String,
-		trim: true
-	},
-	ownerEndpoint: {
-		type: String,
-		trim: true
-	},
-	license: {
-		type: String,
-		trim: true
-	},
-	usability: {
-		type: Number
-	},
-	size: {
-		type: Number
-	},
-	files: {
-		numFiles: {
-			type: Number
+const datasetSchema = mongoose.Schema(
+	{
+		title: {
+			type: String,
+			required: true,
+			trim: true,
 		},
-		fileTypes: {
-			type: Array,
-			default: []
-		}
-	},
-	tags: {
-		type: Array,
-		default: []
-	},
-	upvotes: {
-		type: Number
-	},
-}, {
-	timestamps: true
-});
+		uri: {
+			type: String,
+			required: true,
+			trim: true,
+		},
+		owner: { type: String, trim: true },
+		uploadedAtRelative: { type: String, trim: true },
+		size: { type: String, trim: true },
+		usabilityScore: { type: Number },
+		files: {
+			numFiles: { type: Number },
+			fileTypes: { type: Array, default: [] },
+		},
+		upvotes: { type: Number },
 
-datasetSchema.virtual('ranking', {
-	ref: 'DatasetRanking',
-	localField: '_id',
-	foreignField: 'dataset'
-});
+		// description: { type: String, trim: true },
+		// uploadedAt: { type: Date },
+		// license: { type: String, trim: true },
+		// tags: { type: Array, default: [] },
+	},
+	{
+		timestamps: true,
+		strict: false,
+	}
+);
 
 datasetSchema.methods.toJSON = function () {
 	const dataset = this;
@@ -70,6 +41,4 @@ datasetSchema.methods.toJSON = function () {
 
 const Dataset = mongoose.model('Dataset', datasetSchema);
 
-module.exports = Dataset;
-
-
+export default Dataset;
