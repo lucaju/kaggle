@@ -12,7 +12,10 @@ const datasetSchema = mongoose.Schema(
 			required: true,
 			trim: true,
 		},
-		owner: { type: String, trim: true },
+		owner: {
+			name: { type: String, trim: true },
+			uri: { type: String, trim: true },
+		},
 		uploadedAtRelative: { type: String, trim: true },
 		size: { type: String, trim: true },
 		usabilityScore: { type: Number },
