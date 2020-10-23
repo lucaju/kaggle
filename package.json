@@ -20,6 +20,7 @@
 	"main": "index.js",
 	"scripts": {
 		"start": "env-cmd -e production node src/index.mjs",
+		"scrape": "env-cmd -e production node src/index.mjs",
 		"dev-import": "env-cmd node src/util/import",
 		"dev-import-old": "env-cmd node src/util/importOldResults",
 		"cm": "git-cz"
@@ -29,9 +30,10 @@
 		"chalk": "^4.1.0",
 		"env-cmd": "^10.0.1",
 		"luxon": "^1.21.3",
-		"mongoose": "^5.7.13",
+		"mongoose": "^5.10.10",
 		"node-emoji": "^1.10.0",
-		"puppeteer": "^5.3.1"
+		"ora": "^5.1.0",
+		"puppeteer": "^5.4.0"
 	},
 	"devDependencies": {
 		"commitizen": "^4.2.2",
