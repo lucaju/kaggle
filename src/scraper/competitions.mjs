@@ -1,74 +1,86 @@
 import chalk from 'chalk';
 import emoji from 'node-emoji';
+import ora from 'ora';
 import { logError } from '../logs/datalog.mjs';
 import { saveCompetition } from '../router/competition.mjs';
-import { clearStdout } from './scraper.mjs';
+import { limitScrollTo } from './scraper.mjs';
 
 const url = 'https://www.kaggle.com/competitions';
 let page;
+let spinner;
+
+const tabs = [
+	'active',
+	'completed',
+	'in-class'
+];
 
 export const collectCompetitions = async (browserPage) => {
 	//start
 	page = browserPage;
+	spinner = ora({ spinner: 'dots' });
 
 	console.log(chalk.green.bold('\nCOMPETITIONS'));
 
-	const tabs = ['active', 'completed', 'in-class'];
-
 	for await (const tab of tabs) {
-		// navigate to URL (refresh each time) and wait content to load
+		// navigate to URL (refresh each time to change tab) and wait content to load
+		console.log(chalk.green.bold(`\n${emoji.get('trophy')} Collecting ${tab} Competitions`));
+
+		spinner.start('Loading Page');
 		await page.goto(url);
 		await page.waitForSelector('#site-content');
+		spinner.succeed('Page Loaded');
 
 		const list = await getList(tab);
 
+		spinner.start({
+			prefixText: 'Collecting',
+			text: 'Scrolling',
+		});
+
+		const total = list.length;
+		let index = 1;
+
 		for await (const item of list) {
+			spinner.prefixText = `Collecting [${index}/${total}]`;
 			const competition = await getDetails(item, tab);
+			index++;
+
 			if (!competition) continue;
 			await save(competition);
 		}
+
+		spinner.prefixText = null;
+		spinner.succeed('Data Collected');
 	}
 };
 
 const getList = async (tab) => {
-	console.log(chalk.green.bold(`\n${emoji.get('trophy')} Collecting ${tab} Competitions`));
-
-	try {
-		//Cange Tab
-		if (tab !== 'active') {
-			const nav = await page.$(
-				'#site-content > div:nth-child(2) > div > div:nth-child(3) > nav'
-			);
-			await changeTab(nav, tab);
-		}
-
-		//SCROLL TO LOAD DATA
-		const container = await page.$(
-			'#site-content > div:nth-child(2) > div > div:nth-child(3) > div:nth-child(3) > ul'
-		);
-		const list = scroll(container);
-
-		if (list.length === 0) {
-			processError('Completed Competition: List of items return 0');
-			return [];
-		}
-
-		return list;
-	} catch (error) {
-		processError(error);
-		return null;
+	//Cange Tab
+	if (tab !== 'active') await changeTab(tab);
+	const list = await scroll();
+	if (list.length === 0) {
+		processError('Completed Competition: List of items return 0');
+		return [];
 	}
+	return list;
 };
 
-const changeTab = async (nav, tab) => {
-	// Click on "completed" Button to show list of completed competitions
-	console.log(chalk.yellow(`- Click to switch to "${tab}" competitions`));
+const changeTab = async (tab) => {
+	spinner.start(`Changing Tab to ${tab}`);
+
+	const nav = await page
+		.$('#site-content > div:nth-child(2) > div > div:nth-child(3) > nav')
+		.catch((error) => processError(error));
 
 	let tabChild = '';
 	if (tab === 'completed') tabChild = '2';
 	if (tab === 'in-class') tabChild = '3';
 
-	if (tabChild === '') return;
+	if (tabChild === '') {
+		spinner.succeed('Tab Change Failed');
+		return;
+	}
 
 	const tabToClick = await nav.$(`div:first-child > button:nth-child(${tabChild})`);
 	const boundingBox = await tabToClick.boundingBox();
@@ -78,23 +90,39 @@ const changeTab = async (nav, tab) => {
 	);
 	await page.waitForTimeout(1 * 1000);
 
+	spinner.succeed('Tab Changed');
+
 	return nav;
 };
 
-const scroll = async (container) => {
-	console.log(chalk.yellow('- Scrolling to Load...'));
+const scroll = async () => {
+	spinner.start({
+		prefixText: 'Loading Data',
+		text: 'Scrolling',
+	});
 
+	//Find the list container
+	const container = await page
+		.$('#site-content > div:nth-child(2) > div > div:nth-child(3) > div:nth-child(3) > ul')
+		.catch((error) => processError(error));
+
+	//define the corrent size of the list container
 	const boundingBox = await container.boundingBox();
 	const height = boundingBox.height;
 
+	//This list includes separators beetween each item
 	let list = await container.$$('li:nth-child(odd)');
 
 	let prevListLength = 0;
-	const dot = '.';
 	let scrollN = 1;
+	const indicator = '.';
 
+	// loop as many a necessary to load more data
 	while (list.length > prevListLength) {
-		console.log(chalk.yellow(dot.repeat(scrollN)));
+		let itemLog = chalk.grey(`[${list.length}]`);
+		let scrollLog = chalk.yellow(indicator.repeat(scrollN));
+		spinner.text = `Loading data: ${itemLog} ${scrollLog}`;
+
 		scrollN += 1;
 
 		prevListLength = list.length;
@@ -103,72 +131,94 @@ const scroll = async (container) => {
 		await page.waitForTimeout(2000);
 
 		list = await container.$$('li:nth-child(odd)');
+
+		if (limitScrollTo && list.length > limitScrollTo) break;
 	}
 
-	console.log(chalk.grey(`[${list.length}]`));
-
 	await page.waitForTimeout(500);
+	spinner.succeed('Data Loaded');
 	return list;
 };
 
 const getDetails = async (item, tab) => {
-	try {
-		const title = await item.$eval(
-			'a > span:nth-child(2) > div:first-child',
-			(content) => content.innerText
-		);
+	const competition = {};
 
-		const endpoint = await item.$eval('a', (content) => content.getAttribute('href'));
-		const shortDescription = await item.$eval(
-			'a > span:nth-child(2) > span',
-			(content) => content.innerText
-		);
+	competition.title = await getTitle(item);
+	spinner.text = `:: ${competition.title}`;
 
-		const metadata = {};
-		let meta = await item.$eval(
-			'a > span:nth-child(2) > span:nth-child(3)',
-			(content) => content.innerText
-		);
+	competition.uri = await getUri(item);
+	competition.shortDescrimetaption = await getShortDescription(item);
+	competition.prize = await getPrize(item);
+	competition.active = tab === 'active' ? true : false;
+	competition.inClass = tab === 'in-class' ? true : false;
 
-		if (meta) {
-			meta = meta.trim();
-			meta = meta.split('•');
+	const extraMetada = await getExtraMetadata(item);
+	if (!extraMetada) return competition;
 
-			metadata.category = meta[0].trim();
-			metadata.relativeDeadline = meta[1].trim();
+	if (extraMetada.category) competition.category = extraMetada.competition;
+	if (extraMetada.relativeDeadline) competition.relativeDeadline = extraMetada.relativeDeadline;
+	if (extraMetada.subCategory) competition.subCategory = extraMetada.subCategory;
+	if (extraMetada.teams) competition.teams = extraMetada.teams;
 
-			if (meta.length > 2) {
-				let subCatPos = 2;
-				let teamPos = 3;
+	return competition;
+};
 
-				if (meta.length === 3) teamPos = 2;
-				if (meta.length === 4) metadata.subCategory = meta[subCatPos].trim();
+const getTitle = async (item) => {
+	const title = await item
+		.$eval('a > span:nth-child(2) > div:first-child', (content) => content.innerText)
+		.catch((error) => processError(error));
+	return title;
+};
 
-				metadata.teams = meta[teamPos].trim().split(' ')[0].trim();
-			}
-		}
+const getUri = async (item) => {
+	const endpoint = await item
+		.$eval('a', (content) => content.getAttribute('href'))
+		.catch((error) => processError(error));
+	if (!endpoint) return null;
+	return `https://www.kaggle.com${endpoint}`;
+};
 
-		const prize = await item.$eval('div:nth-child(2)', (content) => content.innerText);
+const getShortDescription = async (item) => {
+	const shortDescription = await item
+		.$eval('a > span:nth-child(2) > span', (content) => content.innerText)
+		.catch((error) => processError(error));
+	return shortDescription;
+};
 
-		const competition = {
-			title,
-			uri: `https://www.kaggle.com${endpoint}`,
-			shortDescription,
-			category: metadata.category,
-			relativeDeadline: metadata.relativeDeadline,
-			subCategory: metadata.subCategory,
-			teams: metadata.teams,
-			prize,
-		};
+const getPrize = async (item) => {
+	const prize = await item
+		.$eval('div:nth-child(2)', (content) => content.innerText)
+		.catch((error) => processError(error));
+	return prize;
+};
 
-		competition.active = tab === 'active' ? true : false;
-		competition.inClass = tab === 'in-class' ? true : false;
+const getExtraMetadata = async (item) => {
+	const metadata = {};
 
-		return competition;
-	} catch (error) {
-		processError(error);
-		return null;
+	const meta = await item
+		.$eval('a > span:nth-child(2) > span:nth-child(3)', (content) => content.innerText)
+		.catch((error) => processError(error));
+
+	if (!meta) return null;
+
+	let data = meta.trim();
+	data = meta.split('•');
+
+	metadata.category = data[0].trim();
+	metadata.relativeDeadline = data[1].trim();
+
+	//Competions can 2, 3, or 4 metadata, and the order can change.
+	if (data.length > 2) {
+		let subCatPos = 2;
+		let teamPos = 3;
+
+		if (data.length === 3) teamPos = 2;
+		if (data.length === 4) metadata.subCategory = data[subCatPos].trim();
+
+		metadata.teams = data[teamPos].trim().split(' ')[0].trim();
 	}
+
+	return metadata;
 };
 
 const save = async (competition) => {
@@ -181,10 +231,8 @@ const save = async (competition) => {
 	}
 
 	const updatedEmoji = data.status === 'updated' ? emoji.get('recycle') : '';
-	logMsg = `${emoji.get('sunny')} ${updatedEmoji} :: ${competition.title}\r\n`;
-
-	clearStdout();
-	process.stdout.write(logMsg);
+	logMsg = `${emoji.get('sunny')} ${updatedEmoji} :: ${competition.title}`;
+	spinner.text = logMsg;
 
 	return competition;
 };
@@ -196,6 +244,7 @@ const processError = (error) => {
 	};
 	console.log(msg);
 	logError(msg);
+	return null;
 };
 
 export default {
