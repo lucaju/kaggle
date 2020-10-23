@@ -5,8 +5,8 @@ import mongoose from './db/mongoose.mjs';
 import { sendLogEmail } from './emails/sendEmail.mjs';
 import { scraper } from './scraper/scraper.mjs';
 
-const targets = [
-	// 'competitions',
+let targets = [
+	'competitions',
 	'datasets',
 	// 'users'
 ];
@@ -17,10 +17,9 @@ const run = async () => {
 
 	if (await mongoose.connect()) await scrape();
 
-	// //send log email
-	// await sendEmail();
+	// await sendEmail(); //send log email
 
-	// //done
+	//done
 	mongoose.close();
 	console.log(chalk.blue('\nDone'));
 };
@@ -28,7 +27,7 @@ const run = async () => {
 const scrape = async () => {
 	// lunch puppeteer
 	const browser = await puppeteer.launch({
-		headless: false,
+		headless: true,
 		defaultViewport: {
 			width: 1000,
 			height: 800,
