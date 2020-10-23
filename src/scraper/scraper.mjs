@@ -1,11 +1,11 @@
-// import { collectCompetitions } from './competitions.mjs';
+import { collectCompetitions } from './competitions.mjs';
 import { collectDatasets } from './datasets.mjs';
 // import { collectUsers } from './users.mjs';
 
 export const scraper = async (target, page) => {
 	switch (target) {
-	// case 'competitions':
-	// await collectCompetitions(page);
+	case 'competitions':
+		return await collectCompetitions(page);
 	case 'datasets':
 		await collectDatasets(page);
 	// case 'users':
@@ -13,12 +13,9 @@ export const scraper = async (target, page) => {
 	}
 };
 
-export const clearStdout = () => {
-	process.stdout.clearLine();
-	process.stdout.cursorTo(0);
-};
+export const limitScrollTo = 75; //null
 
 export default {
 	scraper,
-	clearStdout
+	limitScrollTo
 };
