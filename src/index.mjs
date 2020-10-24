@@ -6,9 +6,9 @@ import { sendLogEmail } from './emails/sendEmail.mjs';
 import { scraper } from './scraper/scraper.mjs';
 
 let targets = [
-	'competitions',
-	'datasets',
-	// 'users'
+	// 'competitions',
+	// 'datasets',
+	'users'
 ];
 
 const run = async () => {
