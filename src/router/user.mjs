@@ -1,90 +1,57 @@
-const User = require('../models/user');
-const chalk = require('chalk');
-const {logMessage, logError} = require('../logs/datalog');
+import User from '../models/user.mjs';
+import { logError } from '../logs/datalog.mjs';
 
-let itemsAdded = 0;
-let itemsUpdated = 0;
-
-const log = [];
-
-const addUsers = async collection => {
-
-	console.log(chalk.grey('\nSaving into database...'));
-
-	for (const data of collection) {
-		await addUser(data);
-	}
-
-	logMessage('Users', `${itemsAdded} added. ${itemsUpdated} updated.`);
-
-	console.log(
-		chalk.keyword('olive')(`${itemsAdded} users added.`),
-		chalk.keyword('orange')(`${itemsUpdated} users updated.\n`)
-	);
-
-};
-
-const findUserByName = async name => {
-	return await User.findOne({name});
-};
-
-const addUser = async data => {
-
-	let user = await findUserByName(data.name);
+export const saveUser = async (data) => {
+	let status = 'inserted';
+	let user = await findDatasetByUri(data.uri);
 
 	if (!user) {
-		user = await inserUser(data);
-		if (user) itemsAdded++;
-		if (user) log.push({tile:user.name, status: 'added'});
+		status = 'inserted';
+		user = await insert(data);
 	} else {
-		user = await updateUser(user, data);
-		if (user) itemsUpdated++;
-		if (user) log.push({tile:user.name, status: 'updated'});
+		status = 'updated';
+		user = await update(user, data);
 	}
 
-	return user;
-
+	return {
+		user,
+		status,
+	};
 };
 
-const inserUser = async data => {
+const findDatasetByUri = async (uri) => {
+	return await User.findOne({ uri });
+};
+
+const insert = async (data) => {
 	const user = new User(data);
 
-	try {
-		return await user.save();
-	} catch (err) {
-		console.log(`MongoDB did not insert user ${user.name}: ${err}`);
-		logError('MongoDB',`MongoDB did not insert user ${user.name}: ${err}`);
-	}
+	return await user.save().catch((error) => {
+		const msg = {
+			title: 'MongoDB',
+			message: `MongoDB did not insert user ${user.name}: ${error}`,
+		};
+		logError(msg);
+		return { error: msg };
+	});
 };
 
-const updateUser = async (user, data) => {
+const update = async (user, data) => {
+	if (data.rankCompetitions) user.rankCompetitions = data.rankCompetitions;
+	if (data.rankDatasets) user.rankDatasets = data.rankDatasets;
+	if (data.rankNotebooks) user.rankNotebooks = data.rankNotebooks;
+	if (data.rankDiscussions) user.rankDiscussions = data.rankDiscussions;
 
-	if (data.tier != '' && user.tier != data.tier) user.tier = data.tier;
-	if (data.points && user.points != data.points) user.points = data.points;
-	if (data.medals.gold && user.medals.gold != data.medals.gold) user.medals.gold = data.medals.gold;
-	if (data.medals.silver && user.medals.silver != data.medals.silver) user.medals.silver = data.medals.silver;
-	if (data.medals.bronze && user.medals.bronze != data.medals.bronze) user.medals.bronze = data.medals.bronze;
-	
-	try {
-		return await user.save();
-	} catch (err) {
-		console.log(`MongoDB did not update user ${user.name}: ${err}`);
-		logError('MongoDB',`MongoDB did not update user ${user.name}: ${err}`);
-	}
+	return await user.save().catch((error) => {
+		const msg = {
+			title: 'MongoDB',
+			message: `MongoDB did not update user ${user.title}: ${error}`,
+		};
+		logError(msg);
+		return { error: msg };
+	});
 };
 
-const getLogUsers = () => {
-	// return {
-	// 	itemsAdded,
-	// 	itemsUpdated
-	// };
-
-	return log;
-};
-
-
-module.exports = {
-	addUsers,
-	addUser,
-	getLogUsers
+export default {
+	saveUser,
 };
