@@ -24,7 +24,7 @@ export const collectCompetitions = async (browserPage) => {
 
 	for await (const tab of tabs) {
 		// navigate to URL (refresh each time to change tab) and wait content to load
-		console.log(chalk.green.bold(`\n${emoji.get('trophy')} Collecting ${tab} Competitions`));
+		console.log(chalk.green.bold(`\n${emoji.get('lollipop')} Collecting ${tab} Competitions`));
 
 		spinner.start('Loading Page');
 		await page.goto(url);
@@ -60,7 +60,7 @@ const getList = async (tab) => {
 	if (tab !== 'active') await changeTab(tab);
 	const list = await scroll();
 	if (list.length === 0) {
-		processError('Completed Competition: List of items return 0');
+		processError(`${tab} Competition: List of items return 0`);
 		return [];
 	}
 	return list;
@@ -136,7 +136,7 @@ const scroll = async () => {
 	}
 
 	await page.waitForTimeout(500);
-	spinner.succeed('Data Loaded');
+	spinner.succeed(`Data Loaded ${chalk.grey(`[${list.length} competitions]`)}`);
 	return list;
 };
 
@@ -239,7 +239,7 @@ const save = async (competition) => {
 
 const processError = (error) => {
 	const msg = {
-		title: 'Scraping Competion',
+		title: 'Scraping Competition',
 		message: error,
 	};
 	console.log(msg);

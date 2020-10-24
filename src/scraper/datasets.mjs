@@ -47,7 +47,7 @@ export const collectDatasets = async (browserPage) => {
 
 		console.log(
 			chalk.green.bold(
-				`\n${emoji.get('lollipop')} Collecting Datasets from query: ${from.value} ${
+				`\n${emoji.get('memo')} Collecting Datasets from query: ${from.value} ${
 					from.unit
 				} - ${to.value} ${to.unit}`
 			)
@@ -136,7 +136,7 @@ const scroll = async () => {
 	}
 
 	await page.waitForTimeout(500);
-	spinner.succeed('Data Loaded');
+	spinner.succeed(`Data Loaded ${chalk.grey(`[${list.length} datasets]`)}`);
 	return list;
 };
 
