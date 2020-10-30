@@ -3,16 +3,16 @@ import emoji from 'node-emoji';
 import ora from 'ora';
 import { logError } from '../logs/datalog.mjs';
 import { saveCompetition } from '../router/competition.mjs';
-import { limitScrollTo } from './scraper.mjs';
+import { limitScrollTo, coolDown } from './scraper.mjs';
 
 const url = 'https://www.kaggle.com/competitions';
 let page;
 let spinner;
 
 const tabs = [
-	'active',
+	// 'active',
 	'completed',
-	'in-class'
+	// 'in-class'
 ];
 
 export const collectCompetitions = async (browserPage) => {
@@ -29,6 +29,7 @@ export const collectCompetitions = async (browserPage) => {
 		spinner.start('Loading Page');
 		await page.goto(url);
 		await page.waitForSelector('#site-content');
+		await page.waitForTimeout(5000);
 		spinner.succeed('Page Loaded');
 
 		const list = await getList(tab);
@@ -52,6 +53,9 @@ export const collectCompetitions = async (browserPage) => {
 
 		spinner.prefixText = null;
 		spinner.succeed('Data Collected');
+
+		//cooldown before next iteration
+		await coolDown(page, spinner);
 	}
 };
 
@@ -147,7 +151,7 @@ const getDetails = async (item, tab) => {
 	spinner.text = `:: ${competition.title}`;
 
 	competition.uri = await getUri(item);
-	competition.shortDescrimetaption = await getShortDescription(item);
+	competition.shortDescription = await getShortDescription(item);
 	competition.prize = await getPrize(item);
 	competition.active = tab === 'active' ? true : false;
 	competition.inClass = tab === 'in-class' ? true : false;
@@ -155,7 +159,7 @@ const getDetails = async (item, tab) => {
 	const extraMetada = await getExtraMetadata(item);
 	if (!extraMetada) return competition;
 
-	if (extraMetada.category) competition.category = extraMetada.competition;
+	if (extraMetada.category) competition.category = extraMetada.category;
 	if (extraMetada.relativeDeadline) competition.relativeDeadline = extraMetada.relativeDeadline;
 	if (extraMetada.subCategory) competition.subCategory = extraMetada.subCategory;
 	if (extraMetada.teams) competition.teams = extraMetada.teams;
