@@ -3,7 +3,7 @@ import emoji from 'node-emoji';
 import ora from 'ora';
 import { logError } from '../logs/datalog.mjs';
 import { saveDataset } from '../router/dataset.mjs';
-import { limitScrollTo } from './scraper.mjs';
+import { limitScrollTo, coolDown } from './scraper.mjs';
 
 const url = 'https://www.kaggle.com/datasets';
 let page;
@@ -13,10 +13,10 @@ const filtersBySize = [
 	{ from: { value: 0, unit: 'KB' }, to: { value: 1, unit: 'KB' } },
 	{ from: { value: 1, unit: 'KB' }, to: { value: 5, unit: 'KB' } },
 	{ from: { value: 5, unit: 'KB' }, to: { value: 10, unit: 'KB' } },
-	// { from: { value: 10, unit: 'KB' }, to: { value: 20, unit: 'KB' } },
-	// { from: { value: 20, unit: 'KB' }, to: { value: 50, unit: 'KB' } },
-	// { from: { value: 50, unit: 'KB' }, to: { value: 100, unit: 'KB' } },
-	// { from: { value: 100, unit: 'KB' }, to: { value: 200, unit: 'KB' } },
+	{ from: { value: 10, unit: 'KB' }, to: { value: 20, unit: 'KB' } },
+	{ from: { value: 20, unit: 'KB' }, to: { value: 50, unit: 'KB' } },
+	{ from: { value: 50, unit: 'KB' }, to: { value: 100, unit: 'KB' } },
+	{ from: { value: 100, unit: 'KB' }, to: { value: 200, unit: 'KB' } },
 	// { from: { value: 200, unit: 'KB' }, to: { value: 500, unit: 'KB' } },
 	// { from: { value: 500, unit: 'KB' }, to: { value: 1, unit: 'MB' } },
 	// { from: { value: 1, unit: 'MB' }, to: { value: 2, unit: 'MB' } },
@@ -56,6 +56,7 @@ export const collectDatasets = async (browserPage) => {
 		spinner.start('Loading Page');
 		await page.goto(`${url}${params}`);
 		await page.waitForSelector('#site-content');
+		await page.waitForTimeout(5000);
 		spinner.succeed('Page Loaded');
 
 		const list = await getList(query);
@@ -79,6 +80,9 @@ export const collectDatasets = async (browserPage) => {
 
 		spinner.prefixText = null;
 		spinner.succeed('Data Collected');
+
+		//cooldown before next iteration
+		await coolDown(page, spinner);
 	}
 };
 
@@ -181,9 +185,10 @@ const getDetails = async (item) => {
 	const slot3 = await getMetadaSlot3(extraMetadataContainer);
 	if (slot3.label === 'business_center') dataset.usabilityScore = parseFloat(slot3.value);
 	if (slot3.label === 'zoom_in') dataset.files = { fileTypes: slot3.value };
+	if (slot3.label === 'insert_drive_file') dataset.files = parseFileTypes(slot3.value);
 
 	const slot4 = await getMetadaSlot4(extraMetadataContainer);
-	if (slot4) dataset.files = slot4;
+	if (slot4 && dataset.files === undefined) dataset.files = slot4;
 
 	const slot5 = await getMetadaSlot5(extraMetadataContainer);
 	if (slot5) dataset.tasks = slot5;
@@ -228,7 +233,8 @@ const getMedal = async (item) => {
 const getOwner = async (item) => {
 	const owner = await item
 		.$eval('div:nth-child(2) > div:nth-child(2) > span:nth-child(2) > a', (content) => ({
-			name: content.innerText,
+			name: content.childNodes[0].childNodes[1].nodeValue,
+			// name_: content.childNodes[1].nodeValue,
 			uri: `https://www.kaggle.com${content.getAttribute('href')}`,
 		}))
 		.catch((error) => processError(error));
@@ -287,7 +293,7 @@ const getMetadaSlot4 = async (container) => {
 		.$eval('span:nth-child(4)', (content) => {
 			const data = content.childNodes[1].nodeValue;
 			const quantity = Number(data.split(' ')[0]);
-			let types = data.match(/\b[^\d\W]+\b/g); //regex: words non-dogit
+			const types = data.match(/\b[^\d\W]+\b/g); //regex: words non-dogit
 			return {
 				numFiles: quantity,
 				fileTypes: types,
@@ -335,6 +341,15 @@ const save = async (dataset) => {
 	spinner.text = logMsg;
 
 	return dataset;
+};
+
+const parseFileTypes = (value) => {
+	const quantity = Number(value.split(' ')[0]);
+	const types = value.match(/\b[^\d\W]+\b/g); //regex: words non-dogit
+	return { 
+		numFiles: quantity,
+		fileTypes: types,
+	};
 };
 
 const processError = (error) => {
