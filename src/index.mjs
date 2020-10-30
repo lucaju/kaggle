@@ -27,7 +27,7 @@ const run = async () => {
 const scrape = async () => {
 	// lunch puppeteer
 	const browser = await puppeteer.launch({
-		headless: true,
+		headless: false,
 		defaultViewport: {
 			width: 1000,
 			height: 800,
