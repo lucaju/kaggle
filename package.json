@@ -30,14 +30,14 @@
 		"chalk": "^4.1.0",
 		"env-cmd": "^10.0.1",
 		"luxon": "^1.21.3",
-		"mongoose": "^5.10.10",
+		"mongoose": "^5.10.11",
 		"node-emoji": "^1.10.0",
 		"ora": "^5.1.0",
-		"puppeteer": "^5.4.0"
+		"puppeteer": "^5.4.1"
 	},
 	"devDependencies": {
 		"commitizen": "^4.2.2",
-		"eslint": "^7.12.0",
+		"eslint": "^7.12.1",
 		"git-cz": "^4.7.1"
 	},
 	"config": {
