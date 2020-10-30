@@ -3,7 +3,7 @@ import emoji from 'node-emoji';
 import ora from 'ora';
 import { logError } from '../logs/datalog.mjs';
 import { saveUser } from '../router/user.mjs';
-import { limitScrollTo } from './scraper.mjs';
+import { limitScrollTo, coolDown } from './scraper.mjs';
 
 const url = 'https://www.kaggle.com/rankings';
 let page;
@@ -33,7 +33,7 @@ export const collectUsers = async (browserPage) => {
 		await page.goto(url);
 		await page.waitForSelector('#site-content');
 		await page.waitForSelector('.smart-list__content');
-		await page.waitForTimeout(1000);
+		await page.waitForTimeout(5000);
 		spinner.succeed('Page Loaded');
 
 		const list = await getList(tab);
@@ -57,6 +57,9 @@ export const collectUsers = async (browserPage) => {
 
 		spinner.prefixText = null;
 		spinner.succeed('Data Collected');
+
+		//cooldown before next iteration
+		await coolDown(page, spinner);
 	}
 };
 
@@ -201,7 +204,7 @@ const getJoinedAt = async (item) => {
 	//get only date
 	const dateSplit = joinedAt.split(' ');
 	//weekday month day year
-	const dateOnly = `${dateSplit[0]} ${dateSplit[1]} ${dateSplit[2]}`;
+	const dateOnly = `${dateSplit[1]} ${dateSplit[2]} ${dateSplit[3]}`;
 	const date = new Date(dateOnly);
 
 	return date;
