@@ -6,7 +6,6 @@ import { config } from '../config.mjs';
 
 const coolDownTime = config.coolDownTime || 5000;
 export const limitScrollTo = config.limitScrollTo || 50; //null
-console.log(limitScrollTo);
 
 export const scraper = async ({ title, url }, page) => {
 	if (title === 'competitions') return await collectCompetitions(url, page);
