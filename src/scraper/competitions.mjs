@@ -10,8 +10,8 @@ let page;
 let spinner;
 
 const tabs = [
-	// 'active',
-	// 'completed',
+	'active',
+	'completed',
 	'in-class'
 ];
 
