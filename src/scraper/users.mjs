@@ -134,8 +134,12 @@ const scroll = async () => {
 	let scrollN = 1;
 	const indicator = '.';
 
+	//
+	let repeat = 0;
+
 	// loop as many a necessary to load more data
-	while (list.length > prevListLength) {
+	// `-1` to allow for repeatation in case that the scrolling doesn't load new data.
+	while (list.length > prevListLength-1) {
 		let itemLog = chalk.grey(`[${list.length}]`);
 		let scrollLog = chalk.yellow(indicator.repeat(scrollN));
 		spinner.text = `Loading data: ${itemLog} ${scrollLog}`;
@@ -149,6 +153,11 @@ const scroll = async () => {
 
 		list = await container.$$('div.block-link');
 
+		//repeat ... in case
+		repeat = (prevListLength === list.length) ? repeat+1 : 0;
+		if (repeat > 2) break; //max: 2 repeatition
+
+		//break if over the limit
 		if (limitScrollTo > 0 && list.length > limitScrollTo) break;
 	}
 
