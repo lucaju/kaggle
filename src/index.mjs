@@ -21,7 +21,7 @@ let targets = [
 ];
 
 const run = async () => {
-	targets = config.target || targets;
+	targets = config.targets || targets;
 
 	const date = new Date();
 	console.log(chalk.blue(`Scraping Kaggle: ${date}`));
