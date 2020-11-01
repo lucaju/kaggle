@@ -5,7 +5,7 @@ import { logError } from '../logs/datalog.mjs';
 import { saveDataset } from '../router/dataset.mjs';
 import { limitScrollTo, coolDown } from './scraper.mjs';
 
-const url = 'https://www.kaggle.com/datasets';
+let url = 'https://www.kaggle.com/datasets';
 let page;
 let spinner;
 
@@ -17,24 +17,25 @@ const filtersBySize = [
 	{ from: { value: 20, unit: 'KB' }, to: { value: 50, unit: 'KB' } },
 	{ from: { value: 50, unit: 'KB' }, to: { value: 100, unit: 'KB' } },
 	{ from: { value: 100, unit: 'KB' }, to: { value: 200, unit: 'KB' } },
-	// { from: { value: 200, unit: 'KB' }, to: { value: 500, unit: 'KB' } },
-	// { from: { value: 500, unit: 'KB' }, to: { value: 1, unit: 'MB' } },
-	// { from: { value: 1, unit: 'MB' }, to: { value: 2, unit: 'MB' } },
-	// { from: { value: 2, unit: 'MB' }, to: { value: 5, unit: 'MB' } },
-	// { from: { value: 5, unit: 'MB' }, to: { value: 10, unit: 'MB' } },
-	// { from: { value: 10, unit: 'MB' }, to: { value: 20, unit: 'MB' } },
-	// { from: { value: 20, unit: 'MB' }, to: { value: 50, unit: 'MB' } },
-	// { from: { value: 50, unit: 'MB' }, to: { value: 100, unit: 'MB' } },
-	// { from: { value: 100, unit: 'MB' }, to: { value: 200, unit: 'MB' } },
-	// { from: { value: 200, unit: 'MB' }, to: { value: 500, unit: 'MB' } },
-	// { from: { value: 500, unit: 'MB' }, to: { value: 1, unit: 'GB' } },
-	// { from: { value: 1, unit: 'GB' }, to: { value: 2, unit: 'GB' } },
-	// { from: { value: 2, unit: 'GB' }, to: { value: 5, unit: 'GB' } },
-	// { from: { value: 5, unit: 'GB' }, to: { value: 100, unit: 'GB' } },
+	{ from: { value: 200, unit: 'KB' }, to: { value: 500, unit: 'KB' } },
+	{ from: { value: 500, unit: 'KB' }, to: { value: 1, unit: 'MB' } },
+	{ from: { value: 1, unit: 'MB' }, to: { value: 2, unit: 'MB' } },
+	{ from: { value: 2, unit: 'MB' }, to: { value: 5, unit: 'MB' } },
+	{ from: { value: 5, unit: 'MB' }, to: { value: 10, unit: 'MB' } },
+	{ from: { value: 10, unit: 'MB' }, to: { value: 20, unit: 'MB' } },
+	{ from: { value: 20, unit: 'MB' }, to: { value: 50, unit: 'MB' } },
+	{ from: { value: 50, unit: 'MB' }, to: { value: 100, unit: 'MB' } },
+	{ from: { value: 100, unit: 'MB' }, to: { value: 200, unit: 'MB' } },
+	{ from: { value: 200, unit: 'MB' }, to: { value: 500, unit: 'MB' } },
+	{ from: { value: 500, unit: 'MB' }, to: { value: 1, unit: 'GB' } },
+	{ from: { value: 1, unit: 'GB' }, to: { value: 2, unit: 'GB' } },
+	{ from: { value: 2, unit: 'GB' }, to: { value: 5, unit: 'GB' } },
+	{ from: { value: 5, unit: 'GB' }, to: { value: 100, unit: 'GB' } },
 ];
 
-export const collectDatasets = async (browserPage) => {
+export const collectDatasets = async (pageUrl, browserPage) => {
 	//start
+	url = pageUrl;
 	page = browserPage;
 	spinner = ora({ spinner: 'dots' });
 
@@ -136,7 +137,7 @@ const scroll = async () => {
 
 		list = await container.$$('li');
 
-		if (limitScrollTo && list.length > limitScrollTo) break;
+		if (limitScrollTo > 0 && list.length > limitScrollTo) break;
 	}
 
 	await page.waitForTimeout(500);

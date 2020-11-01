@@ -1,33 +1,36 @@
+import { Duration } from 'luxon';
 import { collectCompetitions } from './competitions.mjs';
 import { collectDatasets } from './datasets.mjs';
 import { collectUsers } from './users.mjs';
+import { config } from '../config.mjs';
 
-const coolDownTime = 5000;
+const coolDownTime = config.coolDownTime || 5000;
+export const limitScrollTo = config.limitScrollTo || 50; //null
+console.log(limitScrollTo);
 
-export const limitScrollTo = 50; //null
-
-export const scraper = async (target, page) => {
-	switch (target) {
-	case 'competitions':
-		return await collectCompetitions(page);
-	case 'datasets':
-		return await collectDatasets(page);
-	case 'users':
-		return  await collectUsers(page);
-	}
+export const scraper = async ({ title, url }, page) => {
+	if (title === 'competitions') return await collectCompetitions(url, page);
+	if (title === 'datasets') return await collectDatasets(url, page);
+	if (title === 'users') return await collectUsers(url, page);
 };
 
-export const coolDown = async (page,spinner) => {
+export const coolDown = async (page, spinner) => {
 	const interval = 1000;
-	let passedTime = coolDownTime;
+	let duration = Duration.fromMillis(coolDownTime);
 
-	spinner.start({text: `Cooldown${coolDownTime / 1000} seconds`});
+	spinner.start({ text: `Cooldown: ${duration.toFormat('mm:ss')}` });
+
+	//timer
 	const timer = setInterval(() => {
-		passedTime -= interval;
-		spinner.text = `Cooldown: ${passedTime / 1000} seconds`;
+		duration = duration.minus({ milliseconds: interval });
+		const durationText = duration.toFormat('mm:ss');
+		spinner.text = `Cooldown: ${durationText}`;
 	}, interval);
 
+	//waiting
 	await page.waitForTimeout(coolDownTime);
+
+	//after timer
 	clearInterval(timer);
 	spinner.succeed('Done');
 
@@ -37,5 +40,5 @@ export const coolDown = async (page,spinner) => {
 export default {
 	limitScrollTo,
 	coolDown,
-	scraper
+	scraper,
 };

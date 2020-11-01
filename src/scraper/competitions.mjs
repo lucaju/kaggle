@@ -5,18 +5,19 @@ import { logError } from '../logs/datalog.mjs';
 import { saveCompetition } from '../router/competition.mjs';
 import { limitScrollTo, coolDown } from './scraper.mjs';
 
-const url = 'https://www.kaggle.com/competitions';
+let url = 'https://www.kaggle.com/competitions';
 let page;
 let spinner;
 
 const tabs = [
 	// 'active',
-	'completed',
-	// 'in-class'
+	// 'completed',
+	'in-class'
 ];
 
-export const collectCompetitions = async (browserPage) => {
+export const collectCompetitions = async (pageUrl, browserPage) => {
 	//start
+	url = pageUrl;
 	page = browserPage;
 	spinner = ora({ spinner: 'dots' });
 
@@ -136,7 +137,7 @@ const scroll = async () => {
 
 		list = await container.$$('li:nth-child(odd)');
 
-		if (limitScrollTo && list.length > limitScrollTo) break;
+		if (limitScrollTo > 0 && list.length > limitScrollTo) break;
 	}
 
 	await page.waitForTimeout(500);

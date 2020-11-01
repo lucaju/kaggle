@@ -1,17 +1,28 @@
 import chalk from 'chalk';
 import puppeteer from 'puppeteer';
-
+import { config } from './config.mjs';
 import mongoose from './db/mongoose.mjs';
-import { sendLogEmail } from './emails/sendEmail.mjs';
+// import { sendLogEmail } from './emails/sendEmail.mjs';
 import { scraper } from './scraper/scraper.mjs';
 
 let targets = [
-	// 'competitions',
-	// 'datasets',
-	'users'
+	{
+		title: 'competitions',
+		url: 'https://www.kaggle.com/competitions',
+	},
+	{
+		title: 'datasets',
+		url: 'https://www.kaggle.com/datasets',
+	},
+	{
+		title: 'users',
+		url: 'https://www.kaggle.com/rankings',
+	},
 ];
 
 const run = async () => {
+	targets = config.target || targets;
+
 	const date = new Date();
 	console.log(chalk.blue(`Scraping Kaggle: ${date}`));
 
@@ -27,7 +38,7 @@ const run = async () => {
 const scrape = async () => {
 	// lunch puppeteer
 	const browser = await puppeteer.launch({
-		headless: false,
+		headless: puppeteer.headless || false,
 		defaultViewport: {
 			width: 1000,
 			height: 800,
@@ -45,15 +56,15 @@ const scrape = async () => {
 	}
 
 	// close pupeteer and mongoose
-	await page.waitForTimeout(3 * 1000);
+	await page.waitForTimeout(1000);
 	await browser.close();
 };
 
-const sendEmail = async () => {
-	await sendLogEmail().catch((error) => {
-		console.log(`Email not sent: ${error}`);
-		return;
-	});
-};
+// const sendEmail = async () => {
+// 	await sendLogEmail().catch((error) => {
+// 		console.log(`Email not sent: ${error}`);
+// 		return;
+// 	});
+// };
 
 run();

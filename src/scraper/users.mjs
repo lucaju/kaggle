@@ -5,7 +5,7 @@ import { logError } from '../logs/datalog.mjs';
 import { saveUser } from '../router/user.mjs';
 import { limitScrollTo, coolDown } from './scraper.mjs';
 
-const url = 'https://www.kaggle.com/rankings';
+let url = 'https://www.kaggle.com/rankings';
 let page;
 let spinner;
 
@@ -16,8 +16,9 @@ const tabs = [
 	'Discussions'
 ];
 
-export const collectUsers = async (browserPage) => {
+export const collectUsers = async (pageUrl, browserPage) => {
 	//start
+	url = pageUrl;
 	page = browserPage;
 	spinner = ora({ spinner: 'dots' });
 
@@ -148,7 +149,7 @@ const scroll = async () => {
 
 		list = await container.$$('div.block-link');
 
-		if (limitScrollTo && list.length > limitScrollTo) break;
+		if (limitScrollTo > 0 && list.length > limitScrollTo) break;
 	}
 
 	await page.waitForTimeout(500);
