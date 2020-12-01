@@ -26,19 +26,19 @@
 		"cm": "git-cz"
 	},
 	"dependencies": {
-		"@sendgrid/mail": "^7.3.0",
+		"@sendgrid/mail": "^7.4.0",
 		"chalk": "^4.1.0",
 		"env-cmd": "^10.0.1",
 		"luxon": "^1.21.3",
-		"mongoose": "^5.10.11",
+		"mongoose": "^5.11.0",
 		"node-emoji": "^1.10.0",
 		"ora": "^5.1.0",
-		"puppeteer": "^5.4.1"
+		"puppeteer": "^5.5.0"
 	},
 	"devDependencies": {
 		"commitizen": "^4.2.2",
-		"eslint": "^7.12.1",
-		"git-cz": "^4.7.1"
+		"eslint": "^7.14.0",
+		"git-cz": "^4.7.5"
 	},
 	"config": {
 		"commitizen": {
