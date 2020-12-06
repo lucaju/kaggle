@@ -44,6 +44,9 @@ const update = async (competition, data) => {
 	if (data?.prize !== '') competition.prize = data.prize;
 	if (data?.teams !== 0) competition.teams = data.teams;
 
+	//details
+	if (data.details) competition.details = data.details;
+
 	return await competition.save()
 		.catch((error) => {
 			const msg = {

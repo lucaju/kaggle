@@ -19,6 +19,7 @@ const competitionSchema = mongoose.Schema(
 		teams: { type: Number, trim: true },
 		prize: { type: String, trim: true },
 		active: { type: Boolean },
+		details: { type: Object },
 	},
 	{
 		timestamps: true,
