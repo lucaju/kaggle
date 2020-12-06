@@ -19,8 +19,8 @@
 	"type": "module",
 	"main": "index.js",
 	"scripts": {
-		"start": "env-cmd -e production node src/index.mjs",
 		"scrape": "env-cmd -e production node src/index.mjs",
+		"scrape-internal": "env-cmd -e production node src/internal.mjs",
 		"dev-import": "env-cmd node src/util/import",
 		"dev-import-old": "env-cmd node src/util/importOldResults",
 		"cm": "git-cz"
@@ -30,14 +30,14 @@
 		"chalk": "^4.1.0",
 		"env-cmd": "^10.0.1",
 		"luxon": "^1.21.3",
-		"mongoose": "^5.11.0",
+		"mongoose": "^5.11.4",
 		"node-emoji": "^1.10.0",
 		"ora": "^5.1.0",
 		"puppeteer": "^5.5.0"
 	},
 	"devDependencies": {
 		"commitizen": "^4.2.2",
-		"eslint": "^7.14.0",
+		"eslint": "^7.15.0",
 		"git-cz": "^4.7.5"
 	},
 	"config": {
