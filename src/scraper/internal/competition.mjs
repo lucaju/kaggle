@@ -16,11 +16,6 @@ export const collectCompetition = async (item, target, browserPage) => {
 
 	//initial setup
 	tabs = target.tabs;
-	tabs = [
-		'overview',
-		'data',
-		'leaderboard'
-	];
 	page = browserPage;
 	spinner = ora({ spinner: 'dots' });
 	const internalData = {};
@@ -175,7 +170,7 @@ const collectTabOverview = async () => {
 	//tags
 	const tags = await collectOverviewTags();
 	if (tags) overViewData.tags = tags;
-	
+
 	//
 	return overViewData;
 };
@@ -303,7 +298,9 @@ const getLeaderboardTable = async () => {
 
 	//wait initial load.
 	if (collection.length < 2) {
-		await page.waitForSelector('.competition-leaderboard__table > tbody > tr:nth-child(2)');
+		await page
+			.waitForSelector('.competition-leaderboard__table > tbody > tr:nth-child(2)')
+			.catch((error) => processError(error));
 		collection = await page.$$('.competition-leaderboard__table > tbody > tr');
 	}
 
@@ -315,7 +312,9 @@ const getLeaderboardTable = async () => {
 	hasMoreButton.click();
 
 	//wait to load more
-	await page.waitForSelector('.competition-leaderboard__table > tbody > tr:nth-child(52)');
+	await page
+		.waitForSelector('.competition-leaderboard__table > tbody > tr:nth-child(52)')
+		.catch((error) => processError(error));
 
 	//update collection
 	collection = await page

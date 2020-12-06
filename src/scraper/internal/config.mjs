@@ -3,7 +3,7 @@ export const config = {
 		{
 			name: 'competition',
 			titleAttr: 'title',
-			tabs: ['overview', 'data', 'notebooks', 'discussion', 'leaderboard', 'rules'],
+			tabs: ['overview', 'data','leaderboard'],
 		},
 		{
 			name: 'dataset',
