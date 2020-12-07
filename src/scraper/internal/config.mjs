@@ -11,7 +11,7 @@ export const config = {
 		},
 	],
 	filter: {
-		details: { $exists: true }
+		details: { $exists: false }
 	},
 	limit: 100,
 	puppeteer: { headless: false },
@@ -27,7 +27,7 @@ export const config = {
 		retryLimit: 1,
 		retryDelay: 10000,
 		sameDomainDelay: 4000,
-		timeout: 300000,
+		timeout: 600000,
 		monitor: true,
 		workerCreationDelay: 40,
 	}
