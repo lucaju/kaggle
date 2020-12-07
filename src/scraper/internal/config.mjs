@@ -20,11 +20,10 @@ export const config = {
 		// 	tabs: ['home', 'competition', 'notebooks', 'discussion', 'followers'],
 		// },
 	],
-	filterAttr: {
-		// details: false,
-		// ative: true,
+	filter: {
+		// details: { $exists: true }
 	},
-	limit: 25,
+	limit: 500,
 	puppeteer: { headless: false },
 	useCluster: true,
 	// coolDownTime: 300000, // halt the script for [milisecons]

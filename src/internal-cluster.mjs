@@ -73,6 +73,7 @@ const scrape = async () => {
 	//get collection and add titems to to the queue line
 	const collection = await getCollection();
 	// console.log(collection);
+	
 	collection.map((entry) => {
 		entry.url = entry.uri;
 		cluster.queue(entry);
