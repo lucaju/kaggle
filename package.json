@@ -24,6 +24,7 @@
 		"scrape:internal-cluster": "env-cmd -e production node src/internal-cluster.mjs",
 		"dev-import": "env-cmd node src/util/import",
 		"dev-import-old": "env-cmd node src/util/importOldResults",
+		"find": "env-cmd -e production node src/find.mjs",
 		"cm": "git-cz"
 	},
 	"dependencies": {
