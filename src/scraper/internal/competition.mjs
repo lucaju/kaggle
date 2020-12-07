@@ -11,50 +11,61 @@ let nav;
 let spinner;
 let tabs = [];
 
+const useCluster = true;
+
 export const collectCompetition = async (item, target, browserPage) => {
-	console.time('PAGE');
+	if (!useCluster) console.time('PAGE');
 
 	//initial setup
 	tabs = target.tabs;
 	page = browserPage;
-	spinner = ora({ spinner: 'dots' });
+	if (!useCluster) spinner = ora({ spinner: 'dots' });
 	const internalData = {};
 
-	console.log(
-		chalk.green.bold(`\n${emoji.get('lollipop')} COMPETITION: ${item[target.titleAttr]}`)
-	);
+	if (!useCluster) {
+		console.log(
+			chalk.green.bold(`\n${emoji.get('lollipop')} COMPETITION: ${item[target.titleAttr]}`)
+		);
+	}
 
 	//LOAD PAGE
-	spinner.start(chalk.cyan('loading page'));
-	await page.goto(item.uri);
+	if (!useCluster) spinner.start(chalk.cyan('loading page'));
+	const navToPage = await page.goto(item.uri).catch((error) => processError(error));
+	if (!navToPage) throw new Error('page not loeaded');
+
 	await page.waitForSelector('#site-content');
 	await page.waitForTimeout(1000);
-	spinner.succeed('page loaded');
+	if (!useCluster) spinner.succeed('page loaded');
 
 	//Header
-	spinner.start(chalk.cyan('collecting header'));
+	if (!useCluster) spinner.start(chalk.cyan('collecting header'));
 	const header = await collectHeader();
-	if (!header) spinner.fail('header failed');
+	if (!header) if (!useCluster) spinner.fail('header failed');
 	if (header) {
 		internalData.header = header;
-		spinner.succeed('header collected');
+		if (!useCluster) spinner.succeed('header collected');
 	}
 
 	//tabs
 	for await (const tab of tabs) {
-		spinner.start({
-			prefixText: chalk.cyan(tab),
-			text: chalk.cyan('collecting'),
-		});
+		if (!useCluster) {
+			spinner.start({
+				prefixText: chalk.cyan(tab),
+				text: chalk.cyan('collecting'),
+			});
+		}
 
 		//Navigate
 		if (tab !== 'overview') {
-			nav = await getNav(); //SET tab navation;
+			//SET tab navation;
+			nav = await getNav();
+			if (!nav) continue;
+
+			//Change tav
 			const newTab = await changeTab(tab);
-			//tab fail
 			if (!newTab) {
-				spinner.prefixText = null;
-				spinner.fail(`${tab} failed`);
+				if (!useCluster) spinner.prefixText = null;
+				if (!useCluster) spinner.fail(`${tab} failed`);
 				continue;
 			}
 		}
@@ -67,30 +78,30 @@ export const collectCompetition = async (item, target, browserPage) => {
 
 		//data fail
 		if (!data) {
-			spinner.prefixText = null;
-			spinner.fail(`${tab} failed`);
+			if (!useCluster) spinner.prefixText = null;
+			if (!useCluster) spinner.fail(`${tab} failed`);
 			continue;
 		}
 
 		//push data
 		if (data) internalData[tab] = data;
 
-		spinner.prefixText = null;
-		spinner.succeed(`${tab} collected`);
+		if (!useCluster) spinner.prefixText = null;
+		if (!useCluster) spinner.succeed(`${tab} collected`);
 	}
 
 	//save
-	spinner.start(chalk.cyan('saving...'));
+	if (!useCluster) spinner.start(chalk.cyan('saving...'));
 	item.details = internalData;
 	await save(item);
-	spinner.succeed('saved');
+	if (!useCluster) spinner.succeed('saved');
 
 	// console.log(util.inspect(internalData, { showHidden: false, depth: null }));
 
 	//cooldown before next iteration
 	// await coolDown(page, spinner);
 
-	console.timeEnd('PAGE');
+	if (!useCluster) console.timeEnd('PAGE');
 };
 
 // -------------- NAVIGATION --------------- //
@@ -104,7 +115,10 @@ const getNav = async () => {
 
 	const navOptions = [];
 	for await (const element of navElement) {
-		const name = await element.evaluate((content) => content.innerText);
+		const name = await element
+			.evaluate((content) => content.innerText)
+			.catch((error) => processError(error));
+		if (!name) continue;
 		navOptions.push({ name, element });
 	}
 
@@ -124,7 +138,7 @@ const changeTab = async (tabName) => {
 // -------------- HEADER --------------- //
 
 const collectHeader = async () => {
-	const header = await page.$('.pageheader__top--safe');
+	const header = await page.$('.pageheader__top--safe').catch((error) => processError(error));
 	if (!header) return null;
 
 	const headerData = {};
@@ -176,6 +190,8 @@ const collectTabOverview = async () => {
 };
 
 const collectOverviewTimeline = async () => {
+	const result = {};
+
 	const timeline = await page.$('.horizontal-timeline').catch((error) => processError(error));
 	if (!timeline) return null;
 
@@ -184,17 +200,21 @@ const collectOverviewTimeline = async () => {
 			content.getAttribute('title')
 		)
 		.catch((error) => processError(error));
+	if (startDate) result.startDate = startDate;
 
 	const endDate = await timeline
 		.$eval('.horizontal-timeline__point-label--end > span:nth-child(2)', (content) =>
 			content.getAttribute('title')
 		)
 		.catch((error) => processError(error));
+	if (endDate) result.endDate = endDate;
 
-	return { startDate, endDate };
+	return result;
 };
 
 const collectOverviewStats = async () => {
+	const result = {};
+
 	const stats = await page
 		.$('.competition-overview__stats')
 		.catch((error) => processError(error));
@@ -203,34 +223,39 @@ const collectOverviewStats = async () => {
 	const teams = await stats
 		.$eval('div:nth-child(1) > p:nth-child(1)', (content) => content.innerText)
 		.catch((error) => processError(error));
+	if (teams) result.teams = teams;
 
 	const competitors = await stats
 		.$eval('div:nth-child(2) > p:nth-child(1)', (content) => content.innerText)
 		.catch((error) => processError(error));
+	if (competitors) result.competitors = competitors;
 
 	const entries = await stats
 		.$eval('div:nth-child(3) > p:nth-child(1)', (content) => content.innerText)
 		.catch((error) => processError(error));
+	if (entries) result.entries = entries;
 
-	return { teams, competitors, entries };
+	return result;
 };
 
 const collectOverviewTags = async () => {
-	const tagsParent = await page.$('.category__box');
+	const tagsParent = await page.$('.category__box').catch((error) => processError(error));
 	if (!tagsParent) return [];
 
-	const tagsElements = await tagsParent.$$(
-		'div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > span'
-	);
-	if (!tagsParent) return [];
+	const tagsElements = await tagsParent
+		.$$('div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > span')
+		.catch((error) => processError(error));
+	if (!tagsElements) return [];
 
-	const tagsData = [];
-	for (const tag of tagsElements) {
-		const tagData = await tag.$eval('div', (content) => content.innerText);
-		tagsData.push(tagData);
+	const tags = [];
+	for (const tagElement of tagsElements) {
+		const tag = await tagElement
+			.$eval('div', (content) => content.innerText)
+			.catch((error) => processError(error));
+		if (tag) tags.push(tag);
 	}
 
-	return tagsData;
+	return tags;
 };
 
 // -------------- TAB DATA --------------- //
@@ -238,7 +263,8 @@ const collectOverviewTags = async () => {
 const collectTabData = async () => {
 	//wait content
 	await page.waitForSelector('.api-hint__content');
-	const apiBox = await page.$('.api-hint__content');
+	const apiBox = await page.$('.api-hint__content').catch((error) => processError(error));
+	if (!apiBox) return null;
 
 	const apiCode = await apiBox
 		.$eval(
@@ -246,6 +272,7 @@ const collectTabData = async () => {
 			(content) => content.innerText
 		)
 		.catch((error) => processError(error));
+	if (!apiCode) return null;
 
 	let slug = apiCode.split('-c');
 	slug = slug[1].trim();
@@ -267,20 +294,23 @@ const collectTabLeaderboard = async () => {
 		.$$('.competition-leaderboard__table > thead > tr > th')
 		.catch((error) => processError(error));
 	if (!tableHeaders) return null;
+
 	for await (const element of tableHeaders) {
-		const name = await element.evaluate((content) => content.getAttribute('title'));
-		tableFields.push({ name });
+		const name = await element
+			.evaluate((content) => content.getAttribute('title'))
+			.catch((error) => processError(error));
+		if (name) tableFields.push({ name });
 	}
 
 	// get leardboard list
-	spinner.text = chalk.cyan('loading leaderboard');
+	if (!useCluster) spinner.text = chalk.cyan('loading leaderboard');
 	const collection = await getLeaderboardTable();
 	if (!collection) return null;
 
 	//loop through teams
 	let i = 1;
 	for await (const teamElement of collection) {
-		spinner.prefixText = chalk.cyan(`leaderboard [${i}/${collection.length}]`);
+		if (!useCluster) spinner.prefixText = chalk.cyan(`leaderboard [${i}/${collection.length}]`);
 		const team = await collectTeam(teamElement, tableFields);
 		if (team) leaderboard.push(team);
 		i++;
@@ -301,7 +331,11 @@ const getLeaderboardTable = async () => {
 		await page
 			.waitForSelector('.competition-leaderboard__table > tbody > tr:nth-child(2)')
 			.catch((error) => processError(error));
-		collection = await page.$$('.competition-leaderboard__table > tbody > tr');
+
+		collection = await page
+			.$$('.competition-leaderboard__table > tbody > tr')
+			.catch((error) => processError(error));
+		if (!collection) return null;
 	}
 
 	//click to load more
@@ -327,7 +361,9 @@ const getLeaderboardTable = async () => {
 };
 
 const collectTeam = async (teamData, tableFields) => {
-	spinner.text = '';
+	const result = {};
+
+	if (!useCluster) spinner.text = '';
 
 	//name
 	const nameFieldOrder = tableFields.findIndex((field) => field.name === 'Team Name');
@@ -335,31 +371,37 @@ const collectTeam = async (teamData, tableFields) => {
 		.$eval(`td:nth-child(${nameFieldOrder + 1})`, (content) => content.innerText)
 		.catch((error) => processError(error));
 
-	spinner.text = `${name}`;
+	if (name) result.name = name;
+	if (!useCluster) spinner.text = `${name}`;
 
 	//rank
 	const rankFieldOrder = tableFields.findIndex((field) => field.name === 'Rank');
 	const rank = await teamData
 		.$eval(`td:nth-child(${rankFieldOrder + 1})`, (content) => content.innerText)
 		.catch((error) => processError(error));
+	if (rank) result.rank = rank;
 
 	//score
 	const scoreFieldOrder = tableFields.findIndex((field) => field.name === 'Score');
 	const score = await teamData
 		.$eval(`td:nth-child(${scoreFieldOrder + 1})`, (content) => content.innerText)
 		.catch((error) => processError(error));
+	if (score) result.score = score;
 
 	//entries
 	const entriesFieldOrder = tableFields.findIndex((field) => field.name === 'Number of Entries');
 	const entries = await teamData
 		.$eval(`td:nth-child(${entriesFieldOrder + 1})`, (content) => content.innerText)
 		.catch((error) => processError(error));
+	if (entries) result.entries = entries;
 
 	//members
 
 	const members = [];
 	const membersFieldOrder = tableFields.findIndex((field) => field.name === 'Team Members');
-	const membersElement = await teamData.$$(`td:nth-child(${membersFieldOrder + 1}) > span`);
+	const membersElement = await teamData
+		.$$(`td:nth-child(${membersFieldOrder + 1}) > span`)
+		.catch((error) => processError(error));
 
 	if (membersElement) {
 		let i = 1;
@@ -368,22 +410,18 @@ const collectTeam = async (teamData, tableFields) => {
 				.$eval('a', (content) => content.getAttribute('href'))
 				.catch((error) => processError(error));
 
-			spinner.text = `${chalk.cyan(name)} :: member [${i}/${
-				membersElement.length
-			}]: ${member}`;
+			if (!useCluster) {
+				spinner.text = `${chalk.cyan(name)} :: member [${i}/${
+					membersElement.length
+				}]: ${member}`;
+			}
+
 			if (member) members.push(member.replace('/', ''));
 			i++;
 		}
 	}
 
-	//
-	return {
-		rank,
-		name,
-		score,
-		entries,
-		members,
-	};
+	return result;
 };
 
 // -------------- SAVING --------------- //
@@ -399,7 +437,7 @@ const save = async (competition) => {
 
 	const updatedEmoji = data.status === 'updated' ? emoji.get('recycle') : '';
 	logMsg = `${emoji.get('sunny')} ${updatedEmoji} :: ${competition.title}`;
-	spinner.text = logMsg;
+	if (!useCluster) spinner.text = logMsg;
 
 	return competition;
 };
@@ -411,7 +449,6 @@ const processError = (error) => {
 		title: 'Scraping Competition',
 		message: error,
 	};
-	// console.log(msg);
 	logError(msg);
 	return null;
 };

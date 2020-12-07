@@ -20,8 +20,8 @@ export const config = {
 		// details: false,
 		ative: true,
 	},
-	limit: 100,
+	// limit: 10,
 	puppeteer: { headless: false },
-	coolDownTime: 300000, // halt the script for [milisecons]
-	limitScrollTo: -1, // limit the number if items when scrollin [number -1 for no limits]
+	// coolDownTime: 300000, // halt the script for [milisecons]
+	// limitScrollTo: -1, // limit the number if items when scrollin [number -1 for no limits]
 };

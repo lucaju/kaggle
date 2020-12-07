@@ -25,15 +25,7 @@ const findByUri = async (uri) => {
 
 const insert = async (data) => {
 	const competition = new Competition(data);
-	return await competition.save()
-		.catch((error) => {
-			const msg = {
-				title: 'MongoDB',
-				message: `MongoDB did not insert competition ${competition.title}: ${error}`,
-			};
-			logError(msg);
-			return { error: msg };
-		});
+	return await competition.save().catch((error) => processError(error, competition));
 };
 
 const update = async (competition, data) => {
@@ -47,15 +39,16 @@ const update = async (competition, data) => {
 	//details
 	if (data.details) competition.details = data.details;
 
-	return await competition.save()
-		.catch((error) => {
-			const msg = {
-				title: 'MongoDB',
-				message: `MongoDB did not update competition ${competition.title}: ${error}`,
-			};
-			logError(msg);
-			return { error: msg };
-		});
+	return await competition.save().catch((error) => processError(error, competition));
+};
+
+const processError = (error, competition) => {
+	const msg = {
+		title: 'MongoDB',
+		message: `MongoDB did not update competition ${competition.title}: ${error}`,
+	};
+	logError(msg);
+	return { error: msg };
 };
 
 export default {
