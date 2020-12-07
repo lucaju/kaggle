@@ -37,7 +37,8 @@
 		"node-emoji": "^1.10.0",
 		"ora": "^5.1.0",
 		"puppeteer": "^5.5.0",
-		"puppeteer-cluster": "^0.22.0"
+		"puppeteer-cluster": "^0.22.0",
+		"spinnies": "^0.5.1"
 	},
 	"devDependencies": {
 		"commitizen": "^4.2.2",
