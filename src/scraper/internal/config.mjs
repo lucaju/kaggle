@@ -3,25 +3,30 @@ export const config = {
 		{
 			name: 'competition',
 			titleAttr: 'title',
-			tabs: ['overview', 'data','leaderboard'],
+			tabs: [
+				'overview',
+				'data',
+				'leaderboard'
+			],
 		},
-		{
-			name: 'dataset',
-			titleAttr: 'title',
-			tabs: ['data', 'task', 'notebooks', 'discussion', 'activity', 'metadata'],
-		},
-		{
-			name: 'user',
-			titleAttr: 'name',
-			tabs: ['home', 'competition', 'notebooks', 'discussion', 'followers'],
-		},
+		// {
+		// 	name: 'dataset',
+		// 	titleAttr: 'title',
+		// 	tabs: ['data', 'task', 'notebooks', 'discussion', 'activity', 'metadata'],
+		// },
+		// {
+		// 	name: 'user',
+		// 	titleAttr: 'name',
+		// 	tabs: ['home', 'competition', 'notebooks', 'discussion', 'followers'],
+		// },
 	],
 	filterAttr: {
 		// details: false,
-		ative: true,
+		// ative: true,
 	},
-	// limit: 10,
+	limit: 25,
 	puppeteer: { headless: false },
+	useCluster: true,
 	// coolDownTime: 300000, // halt the script for [milisecons]
 	// limitScrollTo: -1, // limit the number if items when scrollin [number -1 for no limits]
 };

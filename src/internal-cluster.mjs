@@ -7,14 +7,18 @@ import Competition from './models/competition.mjs';
 import Dataset from './models/dataset.mjs';
 import User from './models/user.mjs';
 import { config } from './scraper/internal/config.mjs';
-import { scraper } from './scraper/internal/scraper.mjs';
+import { scraper } from './scraper/internal/competition.mjs';
+import Spinnies from 'spinnies';
 
 const target = config.targets[0];
 const errorLog = [];
+// const spinnies = new Spinnies({
+// 	color: 'cyan'
+// });
 
 const cluterConfig = {
-	concurrency: Cluster.CONCURRENCY_CONTEXT,
-	maxConcurrency: 5,
+	concurrency: Cluster.CONCURRENCY_BROWSER,
+	maxConcurrency: 10,
 	puppeteerOptions: {
 		defaultViewport: {
 			width: 1000,
@@ -22,9 +26,9 @@ const cluterConfig = {
 		},
 	},
 	retryLimit: 1,
-	retryDelay: 30000,
+	retryDelay: 10000,
 	sameDomainDelay: 4000,
-	timeout: 120000,
+	timeout: 300000,
 	monitor: true,
 	workerCreationDelay: 40,
 };
@@ -45,25 +49,33 @@ const scrape = async () => {
 	const cluster = await Cluster.launch(cluterConfig);
 
 	// Event handler to be called in case of problems
-	cluster.on('taskerror', (error, data) => {
-		errorLog.push({ date: new Date(), error, data });
+	cluster.on('taskerror', (error, data, willRetry) => {
+		if (willRetry) {
+			console.warn(
+				`Encountered an error while crawling ${data.uri}. ${error.message}\nThis job will be retried`
+			);
+		} else {
+			errorLog.push({
+				date: new Date(),
+				error,
+				title: data.title,
+				uri: data.uri
+			});
+		}
 	});
 
 	await cluster.task(async ({ page, data: item }) => {
-		// await page.goto(item.uri);
-		// const pageTitle = await page.evaluate(() => document.title);
-		// console.log(pageTitle);
-
-		// throw new Error('Fake error');
-
-		await scraper({ item, target }, page);
+		// spinnies.add(item.uri, { text: `Collecting: ${item.title}` });
+		await scraper({item, target , page});
+		// spinnies.succeed(item.uri, { text: `Colleted: ${item.title}` });
 	});
 
 	//get collection and add titems to to the queue line
 	const collection = await getCollection();
-	collection.map((item) => {
-		item.url = item.uri;
-		cluster.queue(item);
+	// console.log(collection);
+	collection.map((entry) => {
+		entry.url = entry.uri;
+		cluster.queue(entry);
 	});
 
 	//

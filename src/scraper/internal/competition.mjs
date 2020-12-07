@@ -4,22 +4,15 @@ import emoji from 'node-emoji';
 import ora from 'ora';
 import { logError } from '../../logs/datalog.mjs';
 import { saveCompetition } from '../../router/competition.mjs';
-// import { coolDown } from './scraper.mjs';
+import { config } from './config.mjs';
 
-let page;
-let nav;
-let spinner;
-let tabs = [];
+const useCluster = config.useCluster;
 
-const useCluster = true;
-
-export const collectCompetition = async (item, target, browserPage) => {
-	if (!useCluster) console.time('PAGE');
+export const scraper = async ({item, target, page}) => {
+	if (!useCluster) console.time(item.uri);
 
 	//initial setup
-	tabs = target.tabs;
-	page = browserPage;
-	if (!useCluster) spinner = ora({ spinner: 'dots' });
+	const spinner = (!useCluster) ? ora({ spinner: 'dots' }) : null;
 	const internalData = {};
 
 	if (!useCluster) {
@@ -39,7 +32,7 @@ export const collectCompetition = async (item, target, browserPage) => {
 
 	//Header
 	if (!useCluster) spinner.start(chalk.cyan('collecting header'));
-	const header = await collectHeader();
+	const header = await collectHeader({page});
 	if (!header) if (!useCluster) spinner.fail('header failed');
 	if (header) {
 		internalData.header = header;
@@ -47,66 +40,78 @@ export const collectCompetition = async (item, target, browserPage) => {
 	}
 
 	//tabs
-	for await (const tab of tabs) {
+	for await (const tabName of target.tabs) {
 		if (!useCluster) {
 			spinner.start({
-				prefixText: chalk.cyan(tab),
+				prefixText: chalk.cyan(tabName),
 				text: chalk.cyan('collecting'),
 			});
 		}
 
 		//Navigate
-		if (tab !== 'overview') {
-			//SET tab navation;
-			nav = await getNav();
-			if (!nav) continue;
-
+		if (tabName !== 'overview') {
 			//Change tav
-			const newTab = await changeTab(tab);
+			const newTab = await changeTab({page, tabName});
 			if (!newTab) {
 				if (!useCluster) spinner.prefixText = null;
-				if (!useCluster) spinner.fail(`${tab} failed`);
+				if (!useCluster) spinner.fail(`${tabName} failed`);
 				continue;
 			}
 		}
 
 		//set function
 		let data = null;
-		if (tab === 'overview') data = await collectTabOverview();
-		if (tab === 'data') data = await collectTabData();
-		if (tab === 'leaderboard') data = await collectTabLeaderboard();
+		if (tabName === 'overview') data = await collectTabOverview({page});
+		if (tabName === 'data') data = await collectTabData({page});
+		if (tabName === 'leaderboard') data = await collectTabLeaderboard({page, spinner});
 
 		//data fail
 		if (!data) {
-			if (!useCluster) spinner.prefixText = null;
-			if (!useCluster) spinner.fail(`${tab} failed`);
+			if (!useCluster) {
+				spinner.prefixText = null;
+				spinner.fail(`${tabName} failed`);
+			}
 			continue;
 		}
 
 		//push data
-		if (data) internalData[tab] = data;
+		if (data) internalData[tabName] = data;
 
 		if (!useCluster) spinner.prefixText = null;
-		if (!useCluster) spinner.succeed(`${tab} collected`);
+		if (!useCluster) spinner.succeed(`${tabName} collected`);
 	}
+
+	// console.log(internalData);
 
 	//save
 	if (!useCluster) spinner.start(chalk.cyan('saving...'));
 	item.details = internalData;
-	await save(item);
+	await save({item, spinner});
 	if (!useCluster) spinner.succeed('saved');
 
 	// console.log(util.inspect(internalData, { showHidden: false, depth: null }));
+	
+	if (!useCluster) console.timeEnd(item.uri);
 
-	//cooldown before next iteration
-	// await coolDown(page, spinner);
-
-	if (!useCluster) console.timeEnd('PAGE');
+	return internalData;
 };
 
 // -------------- NAVIGATION --------------- //
 
-const getNav = async () => {
+const changeTab = async ({page, tabName}) => {
+	const nav = await getNav({page});
+	if (!nav) return null;
+
+	const tabToClick = nav.find((tab) => tab.name.toLowerCase() === tabName.toLowerCase());
+	if (!tabToClick) return null;
+
+	tabToClick.element.click();
+	await page.waitForTimeout(200);
+
+	return tabToClick;
+};
+
+const getNav = async ({page}) => {
 	const navElement = await page
 		.$$('.pageheader__nav-wrapper > a')
 		.catch((error) => processError(error));
@@ -125,19 +130,9 @@ const getNav = async () => {
 	return navOptions;
 };
 
-const changeTab = async (tabName) => {
-	const tabToClick = nav.find((tab) => tab.name.toLowerCase() === tabName.toLowerCase());
-	if (!tabToClick) return null;
-
-	tabToClick.element.click();
-	await page.waitForTimeout(200);
-
-	return tabToClick;
-};
-
 // -------------- HEADER --------------- //
 
-const collectHeader = async () => {
+const collectHeader = async ({page}) => {
 	const header = await page.$('.pageheader__top--safe').catch((error) => processError(error));
 	if (!header) return null;
 
@@ -163,18 +158,18 @@ const collectHeader = async () => {
 
 // -------------- TAB OVERVIEW --------------- //
 
-const collectTabOverview = async () => {
+const collectTabOverview = async ({page}) => {
 	const overViewData = {};
 
 	//timeline
-	const timeline = await collectOverviewTimeline();
+	const timeline = await collectOverviewTimeline({page});
 	if (timeline) {
 		overViewData.startDate = timeline.startDate;
 		overViewData.endDate = timeline.endDate;
 	}
 
 	//stats
-	const stats = await collectOverviewStats();
+	const stats = await collectOverviewStats({page});
 	if (stats) {
 		overViewData.teams = stats.teams;
 		overViewData.competitors = stats.competitors;
@@ -182,14 +177,14 @@ const collectTabOverview = async () => {
 	}
 
 	//tags
-	const tags = await collectOverviewTags();
+	const tags = await collectOverviewTags({page});
 	if (tags) overViewData.tags = tags;
 
 	//
 	return overViewData;
 };
 
-const collectOverviewTimeline = async () => {
+const collectOverviewTimeline = async ({page}) => {
 	const result = {};
 
 	const timeline = await page.$('.horizontal-timeline').catch((error) => processError(error));
@@ -212,7 +207,7 @@ const collectOverviewTimeline = async () => {
 	return result;
 };
 
-const collectOverviewStats = async () => {
+const collectOverviewStats = async ({page}) => {
 	const result = {};
 
 	const stats = await page
@@ -238,7 +233,7 @@ const collectOverviewStats = async () => {
 	return result;
 };
 
-const collectOverviewTags = async () => {
+const collectOverviewTags = async ({page}) => {
 	const tagsParent = await page.$('.category__box').catch((error) => processError(error));
 	if (!tagsParent) return [];
 
@@ -260,7 +255,7 @@ const collectOverviewTags = async () => {
 
 // -------------- TAB DATA --------------- //
 
-const collectTabData = async () => {
+const collectTabData = async ({page}) => {
 	//wait content
 	await page.waitForSelector('.api-hint__content');
 	const apiBox = await page.$('.api-hint__content').catch((error) => processError(error));
@@ -282,7 +277,7 @@ const collectTabData = async () => {
 
 // -------------- TAB LEADERBOARD --------------- //
 
-const collectTabLeaderboard = async () => {
+const collectTabLeaderboard = async ({page, spinner}) => {
 	const leaderboard = [];
 
 	// wait to load the initial list
@@ -304,14 +299,14 @@ const collectTabLeaderboard = async () => {
 
 	// get leardboard list
 	if (!useCluster) spinner.text = chalk.cyan('loading leaderboard');
-	const collection = await getLeaderboardTable();
+	const collection = await getLeaderboardTable({page});
 	if (!collection) return null;
 
 	//loop through teams
 	let i = 1;
 	for await (const teamElement of collection) {
 		if (!useCluster) spinner.prefixText = chalk.cyan(`leaderboard [${i}/${collection.length}]`);
-		const team = await collectTeam(teamElement, tableFields);
+		const team = await collectTeam({teamElement, tableFields, spinner});
 		if (team) leaderboard.push(team);
 		i++;
 	}
@@ -319,7 +314,7 @@ const collectTabLeaderboard = async () => {
 	return leaderboard;
 };
 
-const getLeaderboardTable = async () => {
+const getLeaderboardTable = async ({page}) => {
 	//get collection
 	let collection = await page
 		.$$('.competition-leaderboard__table > tbody > tr')
@@ -360,14 +355,14 @@ const getLeaderboardTable = async () => {
 	return collection;
 };
 
-const collectTeam = async (teamData, tableFields) => {
+const collectTeam = async ({teamElement, tableFields, spinner}) => {
 	const result = {};
 
 	if (!useCluster) spinner.text = '';
 
 	//name
 	const nameFieldOrder = tableFields.findIndex((field) => field.name === 'Team Name');
-	const name = await teamData
+	const name = await teamElement
 		.$eval(`td:nth-child(${nameFieldOrder + 1})`, (content) => content.innerText)
 		.catch((error) => processError(error));
 
@@ -376,21 +371,21 @@ const collectTeam = async (teamData, tableFields) => {
 
 	//rank
 	const rankFieldOrder = tableFields.findIndex((field) => field.name === 'Rank');
-	const rank = await teamData
+	const rank = await teamElement
 		.$eval(`td:nth-child(${rankFieldOrder + 1})`, (content) => content.innerText)
 		.catch((error) => processError(error));
 	if (rank) result.rank = rank;
 
 	//score
 	const scoreFieldOrder = tableFields.findIndex((field) => field.name === 'Score');
-	const score = await teamData
+	const score = await teamElement
 		.$eval(`td:nth-child(${scoreFieldOrder + 1})`, (content) => content.innerText)
 		.catch((error) => processError(error));
 	if (score) result.score = score;
 
 	//entries
 	const entriesFieldOrder = tableFields.findIndex((field) => field.name === 'Number of Entries');
-	const entries = await teamData
+	const entries = await teamElement
 		.$eval(`td:nth-child(${entriesFieldOrder + 1})`, (content) => content.innerText)
 		.catch((error) => processError(error));
 	if (entries) result.entries = entries;
@@ -399,7 +394,7 @@ const collectTeam = async (teamData, tableFields) => {
 
 	const members = [];
 	const membersFieldOrder = tableFields.findIndex((field) => field.name === 'Team Members');
-	const membersElement = await teamData
+	const membersElement = await teamElement
 		.$$(`td:nth-child(${membersFieldOrder + 1}) > span`)
 		.catch((error) => processError(error));
 
@@ -426,9 +421,9 @@ const collectTeam = async (teamData, tableFields) => {
 
 // -------------- SAVING --------------- //
 
-const save = async (competition) => {
+const save = async ({item, spinner}) => {
 	let logMsg = '';
-	const data = await saveCompetition(competition);
+	const data = await saveCompetition(item);
 
 	if (data.error) {
 		logMsg = data.error;
@@ -436,10 +431,10 @@ const save = async (competition) => {
 	}
 
 	const updatedEmoji = data.status === 'updated' ? emoji.get('recycle') : '';
-	logMsg = `${emoji.get('sunny')} ${updatedEmoji} :: ${competition.title}`;
+	logMsg = `${emoji.get('sunny')} ${updatedEmoji} :: ${item.title}`;
 	if (!useCluster) spinner.text = logMsg;
 
-	return competition;
+	return item;
 };
 
 // -------------- PROCESS ERROR --------------- //
@@ -454,5 +449,5 @@ const processError = (error) => {
 };
 
 export default {
-	collectCompetition,
+	scraper,
 };
