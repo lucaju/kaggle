@@ -8,11 +8,11 @@ import { config } from './config.mjs';
 
 const useCluster = config.useCluster;
 
-export const scraper = async ({item, target, page}) => {
+export const scraper = async ({ item, target, page }) => {
 	if (!useCluster) console.time(item.uri);
 
 	//initial setup
-	const spinner = (!useCluster) ? ora({ spinner: 'dots' }) : null;
+	const spinner = !useCluster ? ora({ spinner: 'dots' }) : null;
 	const internalData = {};
 
 	if (!useCluster) {
@@ -32,7 +32,7 @@ export const scraper = async ({item, target, page}) => {
 
 	//Header
 	if (!useCluster) spinner.start(chalk.cyan('collecting header'));
-	const header = await collectHeader({page});
+	const header = await collectHeader({ page });
 	if (!header) if (!useCluster) spinner.fail('header failed');
 	if (header) {
 		internalData.header = header;
@@ -51,7 +51,7 @@ export const scraper = async ({item, target, page}) => {
 		//Navigate
 		if (tabName !== 'overview') {
 			//Change tav
-			const newTab = await changeTab({page, tabName});
+			const newTab = await changeTab({ page, tabName });
 			if (!newTab) {
 				if (!useCluster) spinner.prefixText = null;
 				if (!useCluster) spinner.fail(`${tabName} failed`);
@@ -61,9 +61,9 @@ export const scraper = async ({item, target, page}) => {
 
 		//set function
 		let data = null;
-		if (tabName === 'overview') data = await collectTabOverview({page});
-		if (tabName === 'data') data = await collectTabData({page});
-		if (tabName === 'leaderboard') data = await collectTabLeaderboard({page, spinner});
+		if (tabName === 'overview') data = await collectTabOverview({ page });
+		if (tabName === 'data') data = await collectTabData({ page });
+		if (tabName === 'leaderboard') data = await collectTabLeaderboard({ page, spinner });
 
 		//data fail
 		if (!data) {
@@ -86,11 +86,12 @@ export const scraper = async ({item, target, page}) => {
 	//save
 	if (!useCluster) spinner.start(chalk.cyan('saving...'));
 	item.details = internalData;
-	await save({item, spinner});
+	item.details.createdAt = new Date();
+	await save({ item, spinner });
 	if (!useCluster) spinner.succeed('saved');
 
 	// console.log(util.inspect(internalData, { showHidden: false, depth: null }));
-	
+
 	if (!useCluster) console.timeEnd(item.uri);
 
 	return internalData;
@@ -98,8 +99,8 @@ export const scraper = async ({item, target, page}) => {
 
 // -------------- NAVIGATION --------------- //
 
-const changeTab = async ({page, tabName}) => {
-	const nav = await getNav({page});
+const changeTab = async ({ page, tabName }) => {
+	const nav = await getNav({ page });
 	if (!nav) return null;
 
 	const tabToClick = nav.find((tab) => tab.name.toLowerCase() === tabName.toLowerCase());
@@ -111,7 +112,7 @@ const changeTab = async ({page, tabName}) => {
 	return tabToClick;
 };
 
-const getNav = async ({page}) => {
+const getNav = async ({ page }) => {
 	const navElement = await page
 		.$$('.pageheader__nav-wrapper > a')
 		.catch((error) => processError(error));
@@ -132,7 +133,7 @@ const getNav = async ({page}) => {
 
 // -------------- HEADER --------------- //
 
-const collectHeader = async ({page}) => {
+const collectHeader = async ({ page }) => {
 	const header = await page.$('.pageheader__top--safe').catch((error) => processError(error));
 	if (!header) return null;
 
@@ -158,18 +159,18 @@ const collectHeader = async ({page}) => {
 
 // -------------- TAB OVERVIEW --------------- //
 
-const collectTabOverview = async ({page}) => {
+const collectTabOverview = async ({ page }) => {
 	const overViewData = {};
 
 	//timeline
-	const timeline = await collectOverviewTimeline({page});
+	const timeline = await collectOverviewTimeline({ page });
 	if (timeline) {
 		overViewData.startDate = timeline.startDate;
 		overViewData.endDate = timeline.endDate;
 	}
 
 	//stats
-	const stats = await collectOverviewStats({page});
+	const stats = await collectOverviewStats({ page });
 	if (stats) {
 		overViewData.teams = stats.teams;
 		overViewData.competitors = stats.competitors;
@@ -177,14 +178,14 @@ const collectTabOverview = async ({page}) => {
 	}
 
 	//tags
-	const tags = await collectOverviewTags({page});
+	const tags = await collectOverviewTags({ page });
 	if (tags) overViewData.tags = tags;
 
 	//
 	return overViewData;
 };
 
-const collectOverviewTimeline = async ({page}) => {
+const collectOverviewTimeline = async ({ page }) => {
 	const result = {};
 
 	const timeline = await page.$('.horizontal-timeline').catch((error) => processError(error));
@@ -207,7 +208,7 @@ const collectOverviewTimeline = async ({page}) => {
 	return result;
 };
 
-const collectOverviewStats = async ({page}) => {
+const collectOverviewStats = async ({ page }) => {
 	const result = {};
 
 	const stats = await page
@@ -233,7 +234,7 @@ const collectOverviewStats = async ({page}) => {
 	return result;
 };
 
-const collectOverviewTags = async ({page}) => {
+const collectOverviewTags = async ({ page }) => {
 	const tagsParent = await page.$('.category__box').catch((error) => processError(error));
 	if (!tagsParent) return [];
 
@@ -255,7 +256,7 @@ const collectOverviewTags = async ({page}) => {
 
 // -------------- TAB DATA --------------- //
 
-const collectTabData = async ({page}) => {
+const collectTabData = async ({ page }) => {
 	//wait content
 	await page.waitForSelector('.api-hint__content');
 	const apiBox = await page.$('.api-hint__content').catch((error) => processError(error));
@@ -277,7 +278,7 @@ const collectTabData = async ({page}) => {
 
 // -------------- TAB LEADERBOARD --------------- //
 
-const collectTabLeaderboard = async ({page, spinner}) => {
+const collectTabLeaderboard = async ({ page, spinner }) => {
 	const leaderboard = [];
 
 	// wait to load the initial list
@@ -299,14 +300,14 @@ const collectTabLeaderboard = async ({page, spinner}) => {
 
 	// get leardboard list
 	if (!useCluster) spinner.text = chalk.cyan('loading leaderboard');
-	const collection = await getLeaderboardTable({page});
+	const collection = await getLeaderboardTable({ page });
 	if (!collection) return null;
 
 	//loop through teams
 	let i = 1;
 	for await (const teamElement of collection) {
 		if (!useCluster) spinner.prefixText = chalk.cyan(`leaderboard [${i}/${collection.length}]`);
-		const team = await collectTeam({teamElement, tableFields, spinner});
+		const team = await collectTeam({ teamElement, tableFields, spinner });
 		if (team) leaderboard.push(team);
 		i++;
 	}
@@ -314,7 +315,7 @@ const collectTabLeaderboard = async ({page, spinner}) => {
 	return leaderboard;
 };
 
-const getLeaderboardTable = async ({page}) => {
+const getLeaderboardTable = async ({ page }) => {
 	//get collection
 	let collection = await page
 		.$$('.competition-leaderboard__table > tbody > tr')
@@ -355,7 +356,7 @@ const getLeaderboardTable = async ({page}) => {
 	return collection;
 };
 
-const collectTeam = async ({teamElement, tableFields, spinner}) => {
+const collectTeam = async ({ teamElement, tableFields, spinner }) => {
 	const result = {};
 
 	if (!useCluster) spinner.text = '';
@@ -421,7 +422,7 @@ const collectTeam = async ({teamElement, tableFields, spinner}) => {
 
 // -------------- SAVING --------------- //
 
-const save = async ({item, spinner}) => {
+const save = async ({ item, spinner }) => {
 	let logMsg = '';
 	const data = await saveCompetition(item);
 

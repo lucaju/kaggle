@@ -9,23 +9,26 @@ export const config = {
 				'leaderboard'
 			],
 		},
-		// {
-		// 	name: 'dataset',
-		// 	titleAttr: 'title',
-		// 	tabs: ['data', 'task', 'notebooks', 'discussion', 'activity', 'metadata'],
-		// },
-		// {
-		// 	name: 'user',
-		// 	titleAttr: 'name',
-		// 	tabs: ['home', 'competition', 'notebooks', 'discussion', 'followers'],
-		// },
 	],
 	filter: {
-		// details: { $exists: true }
+		details: { $exists: true }
 	},
-	limit: 500,
+	limit: 100,
 	puppeteer: { headless: false },
 	useCluster: true,
-	// coolDownTime: 300000, // halt the script for [milisecons]
-	// limitScrollTo: -1, // limit the number if items when scrollin [number -1 for no limits]
+	clusterConfig: {
+		maxConcurrency: 8,
+		puppeteerOptions: {
+			defaultViewport: {
+				width: 1000,
+				height: 800,
+			},
+		},
+		retryLimit: 1,
+		retryDelay: 10000,
+		sameDomainDelay: 4000,
+		timeout: 300000,
+		monitor: true,
+		workerCreationDelay: 40,
+	}
 };

@@ -4,39 +4,18 @@ import jsonfile from 'jsonfile';
 import { Cluster } from 'puppeteer-cluster';
 import mongoose from './db/mongoose.mjs';
 import Competition from './models/competition.mjs';
-import Dataset from './models/dataset.mjs';
-import User from './models/user.mjs';
-import { config } from './scraper/internal/config.mjs';
 import { scraper } from './scraper/internal/competition.mjs';
-import Spinnies from 'spinnies';
+import { config } from './scraper/internal/config.mjs';
 
+//
 const target = config.targets[0];
 const errorLog = [];
-// const spinnies = new Spinnies({
-// 	color: 'cyan'
-// });
 
-const cluterConfig = {
-	concurrency: Cluster.CONCURRENCY_BROWSER,
-	maxConcurrency: 10,
-	puppeteerOptions: {
-		defaultViewport: {
-			width: 1000,
-			height: 800,
-		},
-	},
-	retryLimit: 1,
-	retryDelay: 10000,
-	sameDomainDelay: 4000,
-	timeout: 300000,
-	monitor: true,
-	workerCreationDelay: 40,
-};
+const clusterConfig = config.clusterConfig;
+clusterConfig.concurrency = Cluster.CONCURRENCY_BROWSER;
 
 const run = async () => {
-	const date = new Date();
-	console.log(chalk.blue(`Scraping Kaggle: ${date}`));
-
+	//connect to mongoose
 	if (await mongoose.connect()) await scrape();
 
 	//done
@@ -46,7 +25,7 @@ const run = async () => {
 
 const scrape = async () => {
 	//launch
-	const cluster = await Cluster.launch(cluterConfig);
+	const cluster = await Cluster.launch(clusterConfig);
 
 	// Event handler to be called in case of problems
 	cluster.on('taskerror', (error, data, willRetry) => {
@@ -55,31 +34,25 @@ const scrape = async () => {
 				`Encountered an error while crawling ${data.uri}. ${error.message}\nThis job will be retried`
 			);
 		} else {
-			errorLog.push({
-				date: new Date(),
-				error,
-				title: data.title,
-				uri: data.uri
-			});
+			errorLog.push({ date: new Date(), error, title: data.title, uri: data.uri });
 		}
 	});
 
 	await cluster.task(async ({ page, data: item }) => {
-		// spinnies.add(item.uri, { text: `Collecting: ${item.title}` });
-		await scraper({item, target , page});
-		// spinnies.succeed(item.uri, { text: `Colleted: ${item.title}` });
+		await scraper({ item, target, page });
 	});
 
 	//get collection and add titems to to the queue line
 	const collection = await getCollection();
-	// console.log(collection);
-	
+	if (!collection) return;
+
+	//queue
 	collection.map((entry) => {
 		entry.url = entry.uri;
 		cluster.queue(entry);
 	});
 
-	//
+	//end
 	await cluster.idle();
 	await cluster.close();
 
@@ -89,11 +62,9 @@ const scrape = async () => {
 
 const getCollection = async () => {
 	let collection;
-	if (target.name === 'competition')
+	if (target.name === 'competition') {
 		collection = await Competition.find(config.filter).limit(config.limit);
-	if (target.name === 'dataset')
-		collection = await Dataset.find(config.filter).limit(config.limit);
-	if (target.name === 'user') collection = await User.find(config.filter).limit(config.limit);
+	}
 	return collection;
 };
 
