@@ -21,7 +21,7 @@
 	"scripts": {
 		"scrape": "env-cmd -e production node src/index.mjs",
 		"scrape:internal": "env-cmd -e production node src/internal.mjs",
-		"scrape:internal-cluster": "env-cmd -e production node src/internal-cluster.mjs",
+		"scrape:internal-cluster": "env-cmd -e production node --experimental-json-modules src/internal-cluster.mjs",
 		"dev-import": "env-cmd node src/util/import",
 		"dev-import-old": "env-cmd node src/util/importOldResults",
 		"find": "env-cmd -e production node src/find.mjs",
@@ -34,7 +34,7 @@
 		"fs-extra": "^9.0.1",
 		"jsonfile": "^6.1.0",
 		"luxon": "^1.21.3",
-		"mongoose": "^5.11.4",
+		"mongoose": "^5.11.5",
 		"node-emoji": "^1.10.0",
 		"ora": "^5.1.0",
 		"puppeteer": "^5.5.0",
@@ -44,7 +44,7 @@
 	"devDependencies": {
 		"commitizen": "^4.2.2",
 		"eslint": "^7.15.0",
-		"git-cz": "^4.7.5"
+		"git-cz": "^4.7.6"
 	},
 	"config": {
 		"commitizen": {
