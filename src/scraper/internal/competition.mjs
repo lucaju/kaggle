@@ -40,7 +40,11 @@ export const scraper = async ({ item, target, page }) => {
 	}
 
 	//tabs
+	const tabsToSkip = new Set();
 	for await (const tabName of target.tabs) {
+		//skip tab
+		if (tabsToSkip.has(tabName !== 'overview')) continue;
+
 		if (!useCluster) {
 			spinner.start({
 				prefixText: chalk.cyan(tabName),
@@ -59,9 +63,13 @@ export const scraper = async ({ item, target, page }) => {
 			}
 		}
 
-		//set function
+		//set functions
 		let data = null;
-		if (tabName === 'overview') data = await collectTabOverview({ page });
+		if (tabName === 'overview') {
+			const res = await collectTabOverview({ page });
+			data = res.data;
+			if (res.skipTab) tabsToSkip.add(res.skipTab);
+		}
 		if (tabName === 'data') data = await collectTabData({ page });
 		if (tabName === 'leaderboard') data = await collectTabLeaderboard({ page, spinner });
 
@@ -181,8 +189,24 @@ const collectTabOverview = async ({ page }) => {
 	const tags = await collectOverviewTags({ page });
 	if (tags) overViewData.tags = tags;
 
+	//limited?
+	const limitedCompetition = await page
+		.$eval('.pageheader__pagemessage', (content) => content.innerText)
+		.catch((error) => processError(error));
+
+	let skipTab = '';
+	if (
+		limitedCompetition ===
+		'This is a limited-participation competition. Only invited users may participate.'
+	) {
+		skipTab = 'data';
+	}
+
 	//
-	return overViewData;
+	return {
+		data: overViewData,
+		skipTab,
+	};
 };
 
 const collectOverviewTimeline = async ({ page }) => {
@@ -257,8 +281,7 @@ const collectOverviewTags = async ({ page }) => {
 // -------------- TAB DATA --------------- //
 
 const collectTabData = async ({ page }) => {
-	//wait content
-	await page.waitForSelector('.api-hint__content');
+	await page.waitForSelector('.api-hint__content').catch((error) => processError(error));
 	const apiBox = await page.$('.api-hint__content').catch((error) => processError(error));
 	if (!apiBox) return null;
 
