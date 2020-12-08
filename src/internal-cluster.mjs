@@ -6,6 +6,7 @@ import mongoose from './db/mongoose.mjs';
 import Competition from './models/competition.mjs';
 import { scraper } from './scraper/internal/competition.mjs';
 import { config } from './scraper/internal/config.mjs';
+import clusterError from '../log/cluster_error.json';
 
 //
 const target = config.targets[0];
@@ -43,10 +44,21 @@ const scrape = async () => {
 	});
 
 	//get collection and add titems to to the queue line
-	const collection = await getCollection();
+	let collection = await getCollection();
 	if (!collection) return;
 
-	//queue
+	collection = collection.filter((item) => {
+		let match = false;
+		for (const error of clusterError) {
+			if (item.uri === error.uri) {
+				match = true;
+				break;
+			}
+		}
+		if (!match) return item;
+	});
+
+	// queue
 	collection.map((entry) => {
 		entry.url = entry.uri;
 		cluster.queue(entry);
@@ -61,9 +73,10 @@ const scrape = async () => {
 };
 
 const getCollection = async () => {
+	const limit = clusterError ? config.limit + clusterError.length : config.limit;
 	let collection;
 	if (target.name === 'competition') {
-		collection = await Competition.find(config.filter).limit(config.limit);
+		collection = await Competition.find(config.filter).limit(limit);
 	}
 	return collection;
 };
