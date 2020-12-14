@@ -1,6 +1,8 @@
 # folders
 /pastresults
 /design
+/log
+/netvis
 
 # files
 .DS_Store

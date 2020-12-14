@@ -5,7 +5,6 @@ import mongoose from './db/mongoose.mjs';
 import Competition from './models/competition.mjs';
 import Dataset from './models/Dataset.mjs';
 import User from './models/User.mjs';
-import emoji from 'node-emoji';
 import ora from 'ora';
 
 let spinner;
@@ -28,21 +27,22 @@ const start = async () => {
 const parse = async () => {
 	const collection = await getCollection('competition');
 	spinner.start('Parsing');
+	let i = 1;
 	for await (const item of collection) {
+		spinner.text = `Parsing ${item.title} [${i}/${collection.length}]`;
 		if (item.details) await parseItem(item);
 		addToNetvis(item);
+		i++;
 	}
 	spinner.succeed('Data Parsed');
 
 	//save networkk
-	console.log('Saving Netvis (This can take a while)');
 	spinner.start('Saving Netvis');
 	saveNetworkCSV(network);
 	spinner.succeed('Netvis saved');
 };
 
 const parseItem = async (item) => {
-	spinner.text = `Parsing ${item.title}`;
 	if (item.details.header.subTitle) item.subtitle = item.details.header.subTitle;
 	if (item.details.header.organization) item.organizer = item.details.header.organization;
 
@@ -81,7 +81,6 @@ const parseItem = async (item) => {
 };
 
 const save = async (item) => {
-	spinner.text = `Saving ${item.title}`;
 	await item.save();
 };
 
