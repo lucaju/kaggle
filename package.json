@@ -22,6 +22,7 @@
 		"scrape": "env-cmd -e production node src/index.mjs",
 		"scrape:internal": "env-cmd -e production node src/internal.mjs",
 		"scrape:internal-cluster": "env-cmd -e production node --experimental-json-modules src/internal-cluster.mjs",
+		"parser": "env-cmd -e production node src/parser.mjs",
 		"dev-import": "env-cmd node src/util/import",
 		"dev-import-old": "env-cmd node src/util/importOldResults",
 		"find": "env-cmd -e production node src/find.mjs",
@@ -37,6 +38,7 @@
 		"mongoose": "^5.11.7",
 		"node-emoji": "^1.10.0",
 		"ora": "^5.1.0",
+		"papaparse": "^5.3.0",
 		"puppeteer": "^5.5.0",
 		"puppeteer-cluster": "^0.22.0",
 		"spinnies": "^0.5.1"
