@@ -98,7 +98,7 @@ export const scraper = async ({ item, target, page }) => {
 	await save({ item, spinner });
 	if (!useCluster) spinner.succeed('saved');
 
-	// console.log(util.inspect(internalData, { showHidden: false, depth: null }));
+	// console.log(util.inspect(item, { showHidden: false, depth: null }));
 
 	if (!useCluster) console.timeEnd(item.uri);
 
@@ -415,7 +415,6 @@ const collectTeam = async ({ teamElement, tableFields, spinner }) => {
 	if (entries) result.entries = entries;
 
 	//members
-
 	const members = [];
 	const membersFieldOrder = tableFields.findIndex((field) => field.name === 'Team Members');
 	const membersElement = await teamElement
@@ -437,8 +436,9 @@ const collectTeam = async ({ teamElement, tableFields, spinner }) => {
 
 			if (member) members.push(member.replace('/', ''));
 			i++;
-		}
+		}	
 	}
+	result.members = members;
 
 	return result;
 };
