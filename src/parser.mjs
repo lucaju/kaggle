@@ -44,7 +44,7 @@ const parse = async () => {
 
 const parseItem = async (item) => {
 	if (item.details.header.subTitle) item.subtitle = item.details.header.subTitle;
-	if (item.details.header.organization) item.organizer = item.details.header.organization;
+	if (item.details.header.organization) item.organization = item.details.header.organization;
 
 	if (item.details.overview.startDate) item.startDate = new Date(item.details.overview.startDate);
 	if (item.details.overview.endDate) item.endDate = new Date(item.details.overview.endDate);
@@ -90,6 +90,8 @@ const addToNetvis = (item) => {
 	let nodeCompetition = network.nodes.find((node) => node.uri === item.uri);
 	if (!nodeCompetition) {
 		nodeCompetition = {
+			id: item.uri,
+			label: item.title,
 			type: 'competition',
 			name: item.title,
 			uri: item.uri,
@@ -102,20 +104,20 @@ const addToNetvis = (item) => {
 			competitors: item.competitors,
 		};
 
-		if (item.startDate) nodeCompetition.year = item.startDate.getYear(),
-
-		network.nodes.push(nodeCompetition);
+		if (item.startDate)
+			(nodeCompetition.year = item.startDate.getYear()), network.nodes.push(nodeCompetition);
 	}
 
 	// Node Team
 	if (!item.leaderboard) return;
 
 	item.leaderboard.forEach((team) => {
-
 		//teams
 		let nodeTeam = network.nodes.find((node) => node.name === team.name);
 		if (!nodeTeam) {
 			nodeTeam = {
+				id: team.name,
+				label: team.name,
 				type: 'team',
 				name: team.name,
 				rank: team.rank,
@@ -128,7 +130,7 @@ const addToNetvis = (item) => {
 		//edge
 		network.edges.push({
 			source: nodeCompetition.uri,
-			target: nodeTeam.name
+			target: nodeTeam.name,
 		});
 
 		//members
@@ -138,6 +140,8 @@ const addToNetvis = (item) => {
 			let nodeMember = network.nodes.find((node) => node.name === `_${member}`);
 			if (!nodeMember) {
 				nodeMember = {
+					id: `_${member}`,
+					label: `_${member}`,
 					type: 'user',
 					name: `_${member}`,
 				};
@@ -147,7 +151,7 @@ const addToNetvis = (item) => {
 			//edge
 			network.edges.push({
 				source: nodeTeam.name,
-				target: nodeMember.name
+				target: nodeMember.name,
 			});
 		});
 	});
@@ -157,10 +161,27 @@ const saveNetworkCSV = async (data) => {
 	//tranform
 	const nodes = Papa.unparse(data.nodes, {
 		delimiter: '\t',
-		columns: ['type','name', 'uri', 'prize' , 'active', 'inClass', 'category','subCategory', 'year', 'teams', 'competitors', 'rank', 'score', 'entries']
+		columns: [
+			'id',
+			'label',
+			'type',
+			'name',
+			'uri',
+			'prize',
+			'active',
+			'inClass',
+			'category',
+			'subCategory',
+			'year',
+			'teams',
+			'competitors',
+			'rank',
+			'score',
+			'entries',
+		],
 	});
 	const edges = Papa.unparse(data.edges, { delimiter: '\t' });
-	
+
 	//save
 	const folder = 'netvis';
 	if (!fs.existsSync(folder)) fs.mkdirSync(folder);
