@@ -35,7 +35,7 @@
 		"fs-extra": "^9.0.1",
 		"jsonfile": "^6.1.0",
 		"luxon": "^1.21.3",
-		"mongoose": "^5.11.7",
+		"mongoose": "^5.11.8",
 		"node-emoji": "^1.10.0",
 		"ora": "^5.1.0",
 		"papaparse": "^5.3.0",
