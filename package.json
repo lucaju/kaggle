@@ -17,7 +17,6 @@
 		"url": "git+https://github.com/lucaju/kaggle"
 	},
 	"type": "module",
-	"main": "index.js",
 	"scripts": {
 		"scrape:general": "env-cmd -e production node src/scrapers/index.mjs",
 		"scrape:internal": "env-cmd -e production node src/scrapers/internal.mjs",
@@ -39,20 +38,21 @@
 		"node-emoji": "^1.10.0",
 		"ora": "^5.3.0",
 		"papaparse": "^5.3.0",
-		"puppeteer": "^7.0.1",
+		"puppeteer": "^5.5.0",
 		"puppeteer-cluster": "^0.22.0"
 	},
 	"devDependencies": {
 		"commitizen": "^4.2.3",
+		"cz-conventional-changelog": "3.2.0",
 		"eslint": "^7.19.0",
 		"eslint-config-prettier": "^7.2.0",
 		"eslint-plugin-prettier": "^3.3.1",
-		"git-cz": "^4.7.6",
+		"init": "0.1.2",
 		"prettier": "^2.2.1"
 	},
 	"config": {
 		"commitizen": {
-			"path": "git-cz"
+			"path": "cz-conventional-changelog"
 		}
 	}
 }
