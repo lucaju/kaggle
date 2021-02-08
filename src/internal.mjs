@@ -10,54 +10,52 @@ import User from './models/user.mjs';
 const target = config.targets[0];
 
 const run = async () => {
-	const date = new Date();
-	console.log(chalk.blue(`Scraping Kaggle: ${date}`));
+  const date = new Date();
+  console.log(chalk.blue(`Scraping Kaggle: ${date}`));
 
-	if (await mongoose.connect()) await scrape();
+  if (await mongoose.connect()) await scrape();
 
-	//done
-	mongoose.close();
-	console.log(chalk.blue('\nDone'));
+  //done
+  mongoose.close();
+  console.log(chalk.blue('\nDone'));
 };
 
 const scrape = async () => {
-	// lunch puppeteer
-	const browser = await puppeteer.launch({
-		headless: config.puppeteer.headless || false,
-		defaultViewport: {
-			width: 1000,
-			height: 800,
-		},
-	});
+  // lunch puppeteer
+  const browser = await puppeteer.launch({
+    headless: config.puppeteer.headless || false,
+    defaultViewport: {
+      width: 1000,
+      height: 800,
+    },
+  });
 
-	console.log(chalk.gray('Puppeteer Launched'));
+  console.log(chalk.gray('Puppeteer Launched'));
 
-	// open new tab
-	const page = await browser.newPage();
+  // open new tab
+  const page = await browser.newPage();
 
-	//get collection
-	const collection = await getCollection();
+  //get collection
+  const collection = await getCollection();
 
-	console.log(chalk.green.bold('\nCOMPETITIONS'));
+  console.log(chalk.green.bold('\nCOMPETITIONS'));
 
-	// loop through the pages to scrape
-	for await (const item of collection) {
-		await scraper({item, target, page});
-	}
+  // loop through the pages to scrape
+  for await (const item of collection) {
+    await scraper({ item, target, page });
+  }
 
-	// close pupeteer and mongoose
-	await page.waitForTimeout(1000);
-	await browser.close();
+  // close pupeteer and mongoose
+  await page.waitForTimeout(1000);
+  await browser.close();
 };
 
 const getCollection = async () => {
-	let collection;
-	if (target.name === 'competition')
-		collection = await Competition.find(config.filter).limit(config.limit);
-	if (target.name === 'dataset')
-		collection = await Dataset.find(config.filter).limit(config.limit);
-	if (target.name === 'user') collection = await User.find(config.filter).limit(config.limit);
-	return collection;
+  let collection;
+  if (target.name === 'competition') collection = await Competition.find(config.filter).limit(config.limit);
+  if (target.name === 'dataset') collection = await Dataset.find(config.filter).limit(config.limit);
+  if (target.name === 'user') collection = await User.find(config.filter).limit(config.limit);
+  return collection;
 };
 
 run();
