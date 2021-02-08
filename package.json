@@ -29,23 +29,26 @@
 		"cm": "git-cz"
 	},
 	"dependencies": {
-		"@sendgrid/mail": "^7.4.0",
+		"@sendgrid/mail": "^7.4.2",
 		"chalk": "^4.1.0",
 		"env-cmd": "^10.0.1",
-		"fs-extra": "^9.0.1",
+		"fs-extra": "^9.1.0",
 		"jsonfile": "^6.1.0",
 		"luxon": "^1.21.3",
-		"mongoose": "^5.11.8",
+		"mongoose": "^5.11.15",
 		"node-emoji": "^1.10.0",
-		"ora": "^5.1.0",
+		"ora": "^5.3.0",
 		"papaparse": "^5.3.0",
-		"puppeteer": "^5.5.0",
+		"puppeteer": "^7.0.1",
 		"puppeteer-cluster": "^0.22.0"
 	},
 	"devDependencies": {
-		"commitizen": "^4.2.2",
-		"eslint": "^7.15.0",
-		"git-cz": "^4.7.6"
+		"commitizen": "^4.2.3",
+		"eslint": "^7.19.0",
+		"eslint-config-prettier": "^7.2.0",
+		"eslint-plugin-prettier": "^3.3.1",
+		"git-cz": "^4.7.6",
+		"prettier": "^2.2.1"
 	},
 	"config": {
 		"commitizen": {
