@@ -2,8 +2,8 @@
 import chalk from 'chalk';
 import emoji from 'node-emoji';
 import ora from 'ora';
-import { logError } from '../../logs/datalog.mjs';
-import { saveCompetition } from '../../router/competition.mjs';
+import { logError } from '../../../logs/datalog.mjs';
+import { saveCompetition } from '../../../router/competition.mjs';
 import { config } from './config.mjs';
 
 const useCluster = config.useCluster;

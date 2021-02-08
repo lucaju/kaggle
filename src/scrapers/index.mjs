@@ -1,8 +1,8 @@
 import chalk from 'chalk';
 import puppeteer from 'puppeteer';
+import mongoose from '../db/mongoose.mjs';
 import { config } from './config.mjs';
-import mongoose from './db/mongoose.mjs';
-// import { sendLogEmail } from './emails/sendEmail.mjs';
+// import { sendLogEmail } from '../emails/sendEmail.mjs';
 import { scraper } from './scraper/scraper.mjs';
 
 let targets = [

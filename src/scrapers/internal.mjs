@@ -1,11 +1,11 @@
 import chalk from 'chalk';
 import puppeteer from 'puppeteer';
-import { config } from './scraper/internal/config.mjs';
-import mongoose from './db/mongoose.mjs';
+import mongoose from '../db/mongoose.mjs';
+import Competition from '../models/competition.mjs';
+import Dataset from '../models/dataset.mjs';
+import User from '../models/user.mjs';
 import { scraper } from './scraper/internal/competition.mjs';
-import Competition from './models/competition.mjs';
-import Dataset from './models/dataset.mjs';
-import User from './models/user.mjs';
+import { config } from './scraper/internal/config.mjs';
 
 const target = config.targets[0];
 

@@ -19,13 +19,13 @@
 	"type": "module",
 	"main": "index.js",
 	"scripts": {
-		"scrape": "env-cmd -e production node src/index.mjs",
-		"scrape:internal": "env-cmd -e production node src/internal.mjs",
-		"scrape:internal-cluster": "env-cmd -e production node --experimental-json-modules src/internal-cluster.mjs",
-		"parser": "env-cmd -e production node src/parser.mjs",
-		"dev-import": "env-cmd node src/util/import",
-		"dev-import-old": "env-cmd node src/util/importOldResults",
-		"find": "env-cmd -e production node src/find.mjs",
+		"scrape:general": "env-cmd -e production node src/scrapers/index.mjs",
+		"scrape:internal": "env-cmd -e production node src/scrapers/internal.mjs",
+		"scrape:internal-cluster": "env-cmd -e production node --experimental-json-modules src/scrapers/internal-cluster.mjs",
+		"parse:netvis": "env-cmd -e production node src/parsers/parser.mjs",
+		"parse:find": "env-cmd -e production node src/parsers/find.mjs",
+		"import:import": "env-cmd node src/util/import/import",
+		"import:import-old": "env-cmd node src/util/import/importOldResults",
 		"cm": "git-cz"
 	},
 	"dependencies": {

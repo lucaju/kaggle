@@ -1,9 +1,9 @@
 import chalk from 'chalk';
 import emoji from 'node-emoji';
 import ora from 'ora';
-import { logError } from '../logs/datalog.mjs';
-import { saveCompetition } from '../router/competition.mjs';
-import { limitScrollTo, coolDown } from './scraper.mjs';
+import { logError } from '../../logs/datalog.mjs';
+import { saveCompetition } from '../../router/competition.mjs';
+import { coolDown, limitScrollTo } from './scraper.mjs';
 
 let url = 'https://www.kaggle.com/competitions';
 let page;

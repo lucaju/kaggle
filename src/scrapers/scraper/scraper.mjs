@@ -1,8 +1,8 @@
 import { Duration } from 'luxon';
+import { config } from '../config.mjs';
 import { collectCompetitions } from './competitions.mjs';
 import { collectDatasets } from './datasets.mjs';
 import { collectUsers } from './users.mjs';
-import { config } from '../config.mjs';
 
 const coolDownTime = config.coolDownTime || 5000;
 export const limitScrollTo = config.limitScrollTo || 50; //null

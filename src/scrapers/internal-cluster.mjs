@@ -2,11 +2,11 @@ import chalk from 'chalk';
 import fs from 'fs-extra';
 import jsonfile from 'jsonfile';
 import { Cluster } from 'puppeteer-cluster';
-import mongoose from './db/mongoose.mjs';
-import Competition from './models/competition.mjs';
-import { scraper } from './scraper/internal/competition.mjs';
-import { config } from './scraper/internal/config.mjs';
+import mongoose from '../db/mongoose.mjs';
 import clusterError from '../log/cluster_error.json';
+import Competition from '../models/competition.mjs';
+import { scraper } from '../scraper/internal/competition.mjs';
+import { config } from './scraper/internal/config.mjs';
 
 //
 const target = config.targets[0];

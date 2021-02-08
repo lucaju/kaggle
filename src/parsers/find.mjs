@@ -1,8 +1,8 @@
 // import util from 'util';
 // import chalk from 'chalk';
-// import mongoose from './db/mongoose.mjs';
+// import mongoose from '../db/mongoose.mjs';
 
-// import Competition from './models/competition.mjs';
+// import Competition from '../models/competition.mjs';
 
 // // const find = async () => {
 // //   await mongoose.connect();

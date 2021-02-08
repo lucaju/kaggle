@@ -1,10 +1,10 @@
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import Papa from 'papaparse';
-import mongoose from './db/mongoose.mjs';
-import Competition from './models/competition.mjs';
-import Dataset from './models/Dataset.mjs';
-import User from './models/User.mjs';
+import mongoose from '../db/mongoose.mjs';
+import Competition from '../models/competition.mjs';
+import Dataset from '../models/Dataset.mjs';
+import User from '../models/User.mjs';
 import ora from 'ora';
 
 let spinner;
