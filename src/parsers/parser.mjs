@@ -1,6 +1,4 @@
 import chalk from 'chalk';
-import fs from 'fs-extra';
-import Papa from 'papaparse';
 import mongoose from '../db/mongoose.mjs';
 import Competition from '../models/competition.mjs';
 import Dataset from '../models/Dataset.mjs';
@@ -32,15 +30,9 @@ const parse = async () => {
     // spinner.text = `Parsing ${item.title} [${i}/${collection.length}]`;
     console.log(`Parsing ${item.title} [${i}/${collection.length}]`);
     if (item.details) await parseItem(item);
-    addToNetvis(item);
     i++;
   }
   spinner.succeed('Data Parsed');
-
-  //save networkk
-  spinner.start('Saving Netvis');
-  saveNetworkCSV(network);
-  spinner.succeed('Netvis saved');
 };
 
 const parseItem = async (item) => {
@@ -62,13 +54,8 @@ const parseItem = async (item) => {
       const rank = Number(team.rank);
       const entries = Number(team.entries);
       const score = Number(team.score);
-      return {
-        name: team.name,
-        rank,
-        entries,
-        score,
-        members: team.members,
-      };
+
+      return { name: team.name, rank, entries, score, members: team.members };
     });
   }
 
@@ -82,110 +69,6 @@ const parseItem = async (item) => {
 
 const save = async (item) => {
   await item.save();
-};
-
-const addToNetvis = (item) => {
-  spinner.text = `Adding ${item.title} to netvis`;
-  //node Competition
-  let nodeCompetition = network.nodes.find((node) => node.uri === item.uri);
-  if (!nodeCompetition) {
-    nodeCompetition = {
-      id: item.uri,
-      label: item.title,
-      type: 'competition',
-      name: item.title,
-      uri: item.uri,
-      prize: item.prize,
-      active: item.active,
-      inClass: item.inClass,
-      category: item.category,
-      subCategory: item.subCategory,
-      teams: item.teams,
-      competitors: item.competitors,
-    };
-
-    if (item.startDate) (nodeCompetition.year = item.startDate.getYear()), network.nodes.push(nodeCompetition);
-  }
-
-  // Node Team
-  if (!item.leaderboard) return;
-
-  item.leaderboard.forEach((team) => {
-    //teams
-    // let nodeTeam = network.nodes.find((node) => node.name === team.name);
-    // if (!nodeTeam) {
-    // 	nodeTeam = {
-    // 		id: team.name,
-    // 		label: team.name,
-    // 		type: 'team',
-    // 		name: team.name,
-    // 		rank: team.rank,
-    // 		score: team.score,
-    // 		entries: team.entries,
-    // 	};
-    // 	network.nodes.push(nodeTeam);
-    // }
-
-    // //edge
-    // network.edges.push({
-    // 	source: nodeCompetition.uri,
-    // 	target: nodeTeam.name,
-    // });
-
-    //members
-    if (!team.members) return;
-
-    team.members.forEach((member) => {
-      let nodeMember = network.nodes.find((node) => node.name === `_${member}`);
-      if (!nodeMember) {
-        nodeMember = {
-          id: `_${member}`,
-          label: `_${member}`,
-          type: 'user',
-          name: `_${member}`,
-        };
-        network.nodes.push(nodeMember);
-      }
-
-      //edge
-      network.edges.push({
-        source: nodeCompetition.uri,
-        target: nodeMember.name,
-      });
-    });
-  });
-};
-
-const saveNetworkCSV = async (data) => {
-  //tranform
-  const nodes = Papa.unparse(data.nodes, {
-    delimiter: '\t',
-    columns: [
-      'id',
-      'label',
-      'type',
-      'name',
-      'uri',
-      'prize',
-      'active',
-      'inClass',
-      'category',
-      'subCategory',
-      'year',
-      'teams',
-      'competitors',
-      // 'rank',
-      // 'score',
-      // 'entries',
-    ],
-  });
-  const edges = Papa.unparse(data.edges, { delimiter: '\t' });
-
-  //save
-  const folder = 'netvis';
-  if (!fs.existsSync(folder)) fs.mkdirSync(folder);
-  await fs.writeFile(`${folder}/nodes.tsv`, nodes);
-  await fs.writeFile(`${folder}/edges.tsv`, edges);
 };
 
 const getCollection = async (database) => {
