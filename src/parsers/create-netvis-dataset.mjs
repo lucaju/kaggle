@@ -43,26 +43,15 @@ const parseNetwork = async () => {
   console.log(chalk.blue('Fetching data'));
   const collection = await getCollection(config.source);
 
-  spinner.start({
-    prefixText: 'Parsing',
-    text: '',
-  });
-
   collection.forEach((item, i) => {
-    console.log(`Parsing ${item.title} [${i}/${collection.length}]`);
+    const stat = `[${i + 1}/${collection.length}] ${item.title}`;
+    spinner.start(stat);
     if (config.source === 'competition') parseCompetition(item);
-  });
-
-  spinner.succeed({
-    prefixText: '',
-    text: 'Data Parsed',
+    spinner.succeed(stat);
   });
 };
 
 const parseCompetition = (item) => {
-  spinner.prefixText = `${item.title}`;
-  spinner.text = ``;
-  //node Competition
   let nodeCompetition = network.nodes.find((node) => node.uri === item.uri);
 
   if (!nodeCompetition) {
@@ -73,10 +62,8 @@ const parseCompetition = (item) => {
       name: item.title,
       uri: item.uri,
       prize: item.prize,
-      active: item.active,
       inClass: item.inClass,
       category: item.category,
-      subCategory: item.subCategory,
       teams: item.teams,
       competitors: item.competitors,
     };
@@ -95,7 +82,6 @@ const parseCompetition = (item) => {
 };
 
 const parseCompetitionTeam = (nodeCompetition, team) => {
-  spinner.text = team.name;
   //teams
   let nodeTeam;
   if (config.competiton.useTeam) {
@@ -134,7 +120,6 @@ const parseCompetitionTeam = (nodeCompetition, team) => {
 };
 
 const parseCompetitionTeamdMember = (source, member) => {
-  spinner.text = member.name;
   let nodeMember = network.nodes.find((node) => node.name === `_${member}`);
 
   if (!nodeMember) {
@@ -161,27 +146,13 @@ const saveNetworkCSV = async (data) => {
   //tranform
   const nodes = Papa.unparse(data.nodes, {
     delimiter: '\t',
-    columns: [
-      'id',
-      'label',
-      'type',
-      'name',
-      'uri',
-      'prize',
-      'active',
-      'inClass',
-      'category',
-      'subCategory',
-      'year',
-      'teams',
-      'competitors',
-    ],
+    columns: ['id', 'label', 'type', 'name', 'uri', 'prize', 'inClass', 'category', 'year', 'teams', 'competitors'],
   });
   const edges = Papa.unparse(data.edges, { delimiter: '\t' });
 
   //save
   const folder = 'netvis';
-  if (!fs.existsSync(folder)) fs.mkdirSync(folder);
+  await fs.ensureDir(folder);
   await fs.writeFile(`${folder}/nodes.tsv`, nodes);
   await fs.writeFile(`${folder}/edges.tsv`, edges);
 
@@ -189,7 +160,7 @@ const saveNetworkCSV = async (data) => {
 };
 
 const getCollection = async (database) => {
-  if (database === 'competition') return await Competition.find({ inClass: config.competiton.useInclass });
+  if (database === 'competition') return await Competition.find({ inClass: config.competiton.useInclass }); //.limit(2);
   if (database === 'dataset') return await Dataset.find();
   if (database === 'user') return await User.find();
 };
