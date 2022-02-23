@@ -4,6 +4,7 @@
 /log
 /netvis
 /result
+/dist
 
 # files
 .DS_Store
