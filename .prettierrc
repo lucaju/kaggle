@@ -1,5 +1,7 @@
 {
-    "printWidth": 120,
-    "singleQuote": true,
-    "tabs": true
+  "printWidth": 100,
+  "react/jsx-max-props-per-line": [1, {
+    "when": "always"
+  }],
+  "singleQuote": true
 }

@@ -1,0 +1,20 @@
+{
+  "folders": [
+    {
+      "name": "kaggle",
+      "path": "."
+    },
+    {
+      "name": "website",
+      "path": "packages/website"
+    },
+    {
+      "name": "forum",
+      "path": "packages/website-forum"
+    },
+    {
+      "name": "wayback-machine",
+      "path": "packages/wayback-machine"
+    },
+  ],
+}

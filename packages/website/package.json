@@ -1,0 +1,65 @@
+{
+	"name": "scraper-kaggle",
+	"version": "1.0.0",
+	"description": "Scraper for Kaggle",
+	"keywords": [
+		"Kaggle",
+		"Scraper"
+	],
+	"author": {
+		"name": "Luciano Frizzera",
+		"email": "lucaju@gmail.com",
+		"url": "http://luciano.fluxo.art.br"
+	},
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/lucaju/kaggle"
+	},
+	"type": "module",
+	"scripts": {
+		"scrape:general": "env-cmd -e production node src/scrapers/index.mjs",
+		"scrape:internal": "env-cmd -e production node src/scrapers/internal.mjs",
+		"scrape:internal-cluster": "env-cmd -e production node --experimental-json-modules src/scrapers/internal-cluster.mjs",
+		"parse:parse": "env-cmd -e production node src/parsers/parser.mjs",
+		"parse:netvis": "env-cmd -e production node src/parsers/create-netvis-dataset.mjs",
+		"parse:find": "env-cmd -e production node src/parsers/find.mjs",
+		"import:import": "env-cmd node src/util/import/import",
+		"import:import-old": "env-cmd node src/util/import/importOldResults",
+		"cm": "git-cz"
+	},
+	"dependencies": {
+		"@sendgrid/mail": "^7.4.2",
+		"@types/fs-extra": "^9.0.6",
+		"@types/mongoose": "^5.10.3",
+		"@types/ora": "^3.2.0",
+		"@types/papaparse": "^5.2.5",
+		"chalk": "^4.1.0",
+		"env-cmd": "^10.0.1",
+		"fs-extra": "^9.1.0",
+		"jsonfile": "^6.1.0",
+		"luxon": "^1.21.3",
+		"mongoose": "^5.11.15",
+		"node-emoji": "^1.10.0",
+		"ora": "^5.3.0",
+		"papaparse": "^5.3.0",
+		"puppeteer": "^5.5.0",
+		"puppeteer-cluster": "^0.22.0"
+	},
+	"devDependencies": {
+		"commitizen": "^4.2.3",
+		"cz-conventional-changelog": "^3.3.0",
+		"eslint": "^7.19.0",
+		"eslint-config-prettier": "^7.2.0",
+		"eslint-plugin-prettier": "^3.3.1",
+		"git-cz": "^4.7.6",
+		"init": "0.1.2",
+		"prettier": "^2.2.1",
+		"ts-node": "^9.1.1"
+	},
+	"config": {
+		"commitizen": {
+			"path": "cz-conventional-changelog"
+		}
+	}
+}
