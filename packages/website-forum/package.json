@@ -16,7 +16,7 @@
     "env-cmd": "^10.1.0",
     "kleur": "^4.1.4",
     "luxon": "^2.3.2",
-    "mongoose": "^6.3.2",
+    "mongoose": "^5.13.20",
     "node-emoji": "^1.11.0",
     "ora": "^5.4.1",
     "puppeteer": "^13.7.0"
